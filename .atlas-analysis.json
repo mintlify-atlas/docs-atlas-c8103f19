@@ -1,0 +1,103 @@
+{
+  "projectType": "sdk-library",
+  "projectName": "Flutter Callkit Incoming",
+  "projectDescription": "A Flutter plugin that displays native incoming call UI on Android (custom) and iOS (CallKit framework), supporting VoIP push notifications, call events, and full call lifecycle management.",
+  "theme": "palm",
+  "primaryColor": "#aaaaa7",
+  "lightColor": "#4e463d",
+  "darkColor": "#1b265f",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Platform Setup",
+            "pages": [
+              "setup/android",
+              "setup/ios",
+              "setup/pushkit"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/show-incoming-call",
+              "guides/outgoing-call",
+              "guides/call-events",
+              "guides/notifications",
+              "guides/native-integration"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "changelog",
+              "troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Dart API",
+            "pages": [
+              "api/flutter-callkit-incoming",
+              "api/call-kit-params",
+              "api/android-params",
+              "api/ios-params",
+              "api/notification-params",
+              "api/call-event"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Show native incoming call UI on Android and iOS (CallKit)",
+    "Start and manage outgoing calls",
+    "Full call lifecycle events (accept, decline, end, timeout, hold, mute)",
+    "VoIP PushKit integration for iOS background wake",
+    "Missed call and calling notification support on Android",
+    "Custom Android UI with background image, ringtone, and colors",
+    "Native Swift/Kotlin integration for call initiation from platform code",
+    "Android 13+ notification permission and Android 14+ full-screen intent support"
+  ],
+  "publicApiSurface": [
+    "FlutterCallkitIncoming.showCallkitIncoming(CallKitParams)",
+    "FlutterCallkitIncoming.startCall(CallKitParams)",
+    "FlutterCallkitIncoming.endCall(String id)",
+    "FlutterCallkitIncoming.endAllCalls()",
+    "FlutterCallkitIncoming.showMissCallNotification(CallKitParams)",
+    "FlutterCallkitIncoming.hideCallkitIncoming(CallKitParams)",
+    "FlutterCallkitIncoming.setCallConnected(String id)",
+    "FlutterCallkitIncoming.activeCalls()",
+    "FlutterCallkitIncoming.muteCall(String id, {bool isMuted})",
+    "FlutterCallkitIncoming.holdCall(String id, {bool isOnHold})",
+    "FlutterCallkitIncoming.isMuted(String id)",
+    "FlutterCallkitIncoming.getDevicePushTokenVoIP()",
+    "FlutterCallkitIncoming.requestNotificationPermission(dynamic data)",
+    "FlutterCallkitIncoming.requestFullIntentPermission()",
+    "FlutterCallkitIncoming.canUseFullScreenIntent()",
+    "FlutterCallkitIncoming.silenceEvents()",
+    "FlutterCallkitIncoming.unsilenceEvents()",
+    "FlutterCallkitIncoming.onEvent (Stream<CallEvent?>)",
+    "CallKitParams",
+    "AndroidParams",
+    "IOSParams",
+    "NotificationParams",
+    "CallEvent",
+    "Event (enum)"
+  ]
+}
