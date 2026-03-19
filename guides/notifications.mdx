@@ -1,0 +1,192 @@
+---
+title: "Notifications"
+description: "Configure missed call and calling notifications"
+---
+
+The plugin manages two types of notifications: **missed call** notifications (shown when an incoming call times out) and **calling** notifications (shown while a call is active). Both are configured via `NotificationParams`.
+
+## Missed call notification
+
+Pass a `missedCallNotification` inside `CallKitParams` when calling `showCallkitIncoming`. When the call times out, a missed call notification is displayed automatically.
+
+You can also show a missed call notification directly using `showMissCallNotification`:
+
+```dart
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:uuid/uuid.dart';
+
+String _currentUuid = const Uuid().v4();
+
+CallKitParams params = CallKitParams(
+  id: _currentUuid,
+  nameCaller: 'Hien Nguyen',
+  handle: '0123456789',
+  type: 1,
+  missedCallNotification: const NotificationParams(
+    showNotification: true,
+    isShowCallback: true,
+    subtitle: 'Missed call',
+    callbackText: 'Call back',
+  ),
+  android: const AndroidParams(
+    isCustomNotification: true,
+    isShowCallID: true,
+  ),
+  extra: <String, dynamic>{'userId': '1a2b3c4d'},
+);
+await FlutterCallkitIncoming.showMissCallNotification(params);
+```
+
+### NotificationParams fields
+
+| Field | Type | Description | Default |
+|-------|------|-------------|---------|
+| `showNotification` | `bool` | Show the notification when the call times out or is missed. | `true` |
+| `isShowCallback` | `bool` | Show a "Call back" action button in the notification. | `true` |
+| `subtitle` | `String` | Text displayed in the notification body. | `"Missed Call"` |
+| `callbackText` | `String` | Label for the callback action button. | `"Call back"` |
+
+## Calling notification
+
+The `callingNotification` parameter inside `CallKitParams` controls the persistent notification shown on Android while a call is in progress (after the call is started or accepted). Configure it alongside your main call parameters:
+
+```dart
+CallKitParams params = CallKitParams(
+  id: _currentUuid,
+  nameCaller: 'Hien Nguyen',
+  handle: '0123456789',
+  type: 1,
+  callingNotification: const NotificationParams(
+    showNotification: true,
+    isShowCallback: true,
+    subtitle: 'Calling...',
+    callbackText: 'Hang Up',
+  ),
+  // ...
+);
+```
+
+## Hiding call notifications (Android)
+
+After the user accepts or declines a call, dismiss the Android incoming call notification explicitly:
+
+```dart
+CallKitParams params = CallKitParams(
+  id: _currentUuid,
+);
+await FlutterCallkitIncoming.hideCallkitIncoming(params);
+```
+
+<Note>
+  `hideCallkitIncoming` is Android-only. On iOS, CallKit manages the call UI lifecycle automatically.
+</Note>
+
+## Android notification channels
+
+Android groups notifications into channels. You can customise the channel names shown in the system notification settings using `AndroidParams`:
+
+```dart
+android: const AndroidParams(
+  incomingCallNotificationChannelName: 'Incoming Call',
+  missedCallNotificationChannelName: 'Missed Call',
+  // ...
+),
+```
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `incomingCallNotificationChannelName` | `"Incoming call"` | Channel name for incoming call notifications. |
+| `missedCallNotificationChannelName` | `"Missed call"` | Channel name for missed call notifications. |
+
+## iOS missed call notification
+
+On iOS, missed call notifications are delivered through `UNUserNotificationCenter`. Add the delegate methods to your `AppDelegate.swift` so notifications appear in the foreground and the "Call back" action is handled correctly.
+
+```swift
+@UIApplicationMain
+@objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate, CallkitIncomingAppDelegate {
+
+    override func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        GeneratedPluginRegistrant.register(with: self)
+
+        // Required for missed call notification in foreground
+        if #available(iOS 10.0, *) {
+            UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
+        }
+
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+
+    // Show notification even when app is in foreground
+    override func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        CallkitNotificationManager.shared.userNotificationCenter(
+            center, willPresent: notification, withCompletionHandler: completionHandler
+        )
+    }
+
+    // Handle "Call back" tap from missed call notification
+    override func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        if response.actionIdentifier == CallkitNotificationManager.CALLBACK_ACTION {
+            let data = response.notification.request.content.userInfo as? [String: Any]
+            SwiftFlutterCallkitIncomingPlugin.sharedInstance?.sendCallbackEvent(data)
+        }
+        completionHandler()
+    }
+}
+```
+
+## Android 13+ notification permission
+
+Android 13 (API 33) requires explicit permission before posting notifications. Request it before calling `showCallkitIncoming`:
+
+```dart
+await FlutterCallkitIncoming.requestNotificationPermission({
+  'title': 'Notification permission',
+  'rationaleMessagePermission':
+      'Notification permission is required, to show notification.',
+  'postNotificationMessageRequired':
+      'Notification permission is required, Please allow notification permission from setting.',
+});
+```
+
+<Note>
+  Alternatively, you can use `requestPermission()` from the `firebase_messaging` package which handles this automatically.
+</Note>
+
+## Android 14+ full-screen intent permission
+
+Android 14 (API 34) introduced a new `USE_FULL_SCREEN_INTENT` permission required to show the incoming call UI over the lock screen. Check for the permission and request it if needed:
+
+```dart
+// Check whether the app can show full-screen intents
+bool canShow = await FlutterCallkitIncoming.canUseFullScreenIntent();
+
+if (!canShow) {
+  // Opens the system settings page to grant the permission
+  await FlutterCallkitIncoming.requestFullIntentPermission();
+}
+```
+
+<Warning>
+  Without full-screen intent permission on Android 14+, incoming calls will not appear over the lock screen. Request this permission as early as possible, ideally in `initState` or on app launch.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Show incoming call" icon="phone-incoming" href="/guides/show-incoming-call">
+    Configure and display the native incoming call screen.
+  </Card>
+  <Card title="Call events" icon="bolt" href="/guides/call-events">
+    Handle the callback event from missed call notifications.
+  </Card>
+</CardGroup>

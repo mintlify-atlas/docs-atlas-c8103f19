@@ -1,0 +1,164 @@
+---
+title: "Show an incoming call"
+description: "Display a native incoming call screen on Android and iOS"
+---
+
+When a call arrives, `showCallkitIncoming` presents the native call UI. On **iOS** this uses Apple's CallKit framework — the same full-screen lock-screen experience built into the Phone app. On **Android** a custom full-screen notification is used because there is no system CallKit equivalent.
+
+<Note>
+  iOS CallKit only works on a real device. The simulator does not support the CallKit framework.
+</Note>
+
+## Show the incoming call screen
+
+<Steps>
+  <Step title="Generate a UUID for the call">
+    Every call must have a unique UUID. Use the [`uuid`](https://pub.dev/packages/uuid) package to generate one and keep it for the lifetime of the call.
+
+    ```dart
+    import 'package:uuid/uuid.dart';
+
+    final _uuid = const Uuid();
+    String _currentUuid = _uuid.v4();
+    ```
+  </Step>
+
+  <Step title="Build CallKitParams and call showCallkitIncoming">
+    Pass a fully configured `CallKitParams` object. The example below enables all customisation options on both platforms.
+
+    ```dart
+    import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+
+    CallKitParams callKitParams = CallKitParams(
+      id: _currentUuid,            // must be a UUID
+      nameCaller: 'Hien Nguyen',
+      appName: 'Callkit',
+      avatar: 'https://i.pravatar.cc/100',
+      handle: '0123456789',
+      type: 0,                     // 0 = audio, 1 = video
+      textAccept: 'Accept',
+      textDecline: 'Decline',
+      missedCallNotification: NotificationParams(
+        showNotification: true,
+        isShowCallback: true,
+        subtitle: 'Missed call',
+        callbackText: 'Call back',
+      ),
+      callingNotification: const NotificationParams(
+        showNotification: true,
+        isShowCallback: true,
+        subtitle: 'Calling...',
+        callbackText: 'Hang Up',
+      ),
+      duration: 30000,             // milliseconds before call times out
+      extra: <String, dynamic>{'userId': '1a2b3c4d'},
+      headers: <String, dynamic>{'apiKey': 'Abc@123!', 'platform': 'flutter'},
+      android: const AndroidParams(
+        isCustomNotification: true,
+        isShowLogo: false,
+        logoUrl: 'https://i.pravatar.cc/100',
+        ringtonePath: 'system_ringtone_default',
+        backgroundColor: '#0955fa',
+        backgroundUrl: 'https://i.pravatar.cc/500',
+        actionColor: '#4CAF50',
+        textColor: '#ffffff',
+        incomingCallNotificationChannelName: 'Incoming Call',
+        missedCallNotificationChannelName: 'Missed Call',
+        isShowCallID: false,
+      ),
+      ios: IOSParams(
+        iconName: 'CallKitLogo',
+        handleType: 'generic',
+        supportsVideo: true,
+        maximumCallGroups: 2,
+        maximumCallsPerCallGroup: 1,
+        audioSessionMode: 'default',
+        audioSessionActive: true,
+        audioSessionPreferredSampleRate: 44100.0,
+        audioSessionPreferredIOBufferDuration: 0.005,
+        supportsDTMF: true,
+        supportsHolding: true,
+        supportsGrouping: false,
+        supportsUngrouping: false,
+        ringtonePath: 'system_ringtone_default',
+      ),
+    );
+
+    await FlutterCallkitIncoming.showCallkitIncoming(callKitParams);
+    ```
+  </Step>
+</Steps>
+
+## Key parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `String` | **Required.** Must be a UUID. Use the same UUID for all subsequent operations on this call (end, mute, hold, etc.). |
+| `nameCaller` | `String` | Caller name displayed on the incoming call screen. |
+| `handle` | `String` | Phone number, email address, or any identifier for the caller. |
+| `type` | `int` | `0` for audio call, `1` for video call. Defaults to `0`. |
+| `duration` | `int` | Milliseconds to display the incoming call UI. When the timer expires the call is marked as missed. Defaults to `30000`. |
+| `avatar` | `String` | URL of the caller's avatar image (Android only). |
+| `extra` | `Map` | Arbitrary data passed through to every call event on this call. |
+
+## Hide the call notification (Android)
+
+After the user accepts or declines a call on Android, dismiss the incoming call notification by calling `hideCallkitIncoming`.
+
+```dart
+CallKitParams params = CallKitParams(
+  id: _currentUuid,
+);
+await FlutterCallkitIncoming.hideCallkitIncoming(params);
+```
+
+<Note>
+  This method is Android-only. On iOS CallKit manages its own UI lifecycle.
+</Note>
+
+## Mark the call as connected
+
+Call `setCallConnected` once your WebRTC or P2P session is fully established. On iOS this resets the call timer in the Phone app history; on Android it fires a callback event.
+
+```dart
+await FlutterCallkitIncoming.setCallConnected(_currentUuid);
+```
+
+<Tip>
+  Call `setCallConnected` after accepting the call **and** after the WebRTC/P2P connection is established — not immediately on accept.
+</Tip>
+
+## Get active calls
+
+Use `activeCalls` to check for ongoing calls, for example when the app is launched from a terminated state.
+
+```dart
+var calls = await FlutterCallkitIncoming.activeCalls();
+// Returns: [{"id": "8BAA2B26-47AD-42C1-9197-1D75F662DF78", ...}]
+```
+
+<Warning>
+  On iOS `activeCalls` returns the active calls from CallKit (id only). On Android it returns only the last call.
+</Warning>
+
+## Firebase background message handler
+
+If you are triggering `showCallkitIncoming` from a Firebase Cloud Messaging background handler, annotate the handler with `@pragma('vm:entry-point')` so the Dart VM does not tree-shake it.
+
+```dart
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  // generate a UUID and show the incoming call
+  await showCallkitIncoming(const Uuid().v4());
+}
+```
+
+<CardGroup cols={2}>
+  <Card title="Call events" icon="bolt" href="/guides/call-events">
+    Listen to accept, decline, timeout, and other lifecycle events.
+  </Card>
+  <Card title="Notifications" icon="bell" href="/guides/notifications">
+    Configure missed call and calling notifications.
+  </Card>
+</CardGroup>

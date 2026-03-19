@@ -1,0 +1,94 @@
+---
+title: "NotificationParams"
+description: "Configuration for missed call and calling notifications"
+---
+
+`NotificationParams` controls the appearance of two notification types:
+
+- **Missed call notification** — shown when an incoming call times out without being answered. Assigned to `CallKitParams.missedCallNotification`.
+- **Calling notification** — shown persistently while a call is in progress (outgoing or accepted). Assigned to `CallKitParams.callingNotification`.
+
+```dart
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+
+const params = CallKitParams(
+  id: '44d915e1-5ff4-4bed-bf13-c423048ec97a',
+  nameCaller: 'Jane Doe',
+  missedCallNotification: NotificationParams(
+    showNotification: true,
+    isShowCallback: true,
+    subtitle: 'Missed call',
+    callbackText: 'Call back',
+  ),
+  callingNotification: NotificationParams(
+    showNotification: true,
+    isShowCallback: true,
+    subtitle: 'Calling...',
+    callbackText: 'Hang Up',
+  ),
+);
+```
+
+## Constructor
+
+```dart
+const NotificationParams({
+  int? id,
+  bool? showNotification,
+  String? subtitle,
+  String? callbackText,
+  bool? isShowCallback,
+  int? count,
+})
+```
+
+## Fields
+
+<ParamField path="showNotification" type="bool?" default="true">
+  Whether to show the notification at all.
+
+  - For `missedCallNotification`: controls whether a missed-call notification appears when the incoming call times out.
+  - For `callingNotification`: controls whether a persistent notification is shown during an active/outgoing call.
+</ParamField>
+
+<ParamField path="isShowCallback" type="bool?" default="true">
+  Whether to display a callback action button inside the notification.
+
+  - For `missedCallNotification`: shows a "Call back" action that triggers `Event.actionCallCallback` when tapped.
+  - For `callingNotification`: shows a "Hang Up" action to end the call from the notification.
+</ParamField>
+
+<ParamField path="subtitle" type="String?">
+  Secondary text displayed below the caller name in the notification.
+
+  Typical values:
+  - Missed call notification: `"Missed call"`
+  - Calling notification: `"Calling..."`
+</ParamField>
+
+<ParamField path="callbackText" type="String?">
+  Label for the callback/action button in the notification.
+
+  Typical values:
+  - Missed call notification: `"Call back"`
+  - Calling notification: `"Hang Up"`
+</ParamField>
+
+<ParamField path="id" type="int?">
+  Internal notification ID used by the Android notification manager. If not set, the plugin assigns one automatically. Only relevant when you need to update or cancel the notification programmatically outside of the plugin.
+</ParamField>
+
+<ParamField path="count" type="int?">
+  Badge count shown on the notification. Used by some Android launchers to display a numeric badge on the app icon.
+</ParamField>
+
+## Usage context
+
+`NotificationParams` is reused for both notification slots but the semantics of each field differ slightly depending on which slot it occupies:
+
+| Field | `missedCallNotification` | `callingNotification` |
+|---|---|---|
+| `subtitle` | "Missed call" | "Calling..." |
+| `callbackText` | "Call back" | "Hang Up" |
+| `isShowCallback` | Shows recall action | Shows hang-up action |
+| `showNotification` | Show on timeout | Show during active call |

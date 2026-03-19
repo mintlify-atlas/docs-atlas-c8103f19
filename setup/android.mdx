@@ -1,0 +1,92 @@
+---
+title: "Android setup"
+description: "Configure your Android project to work with Flutter Callkit Incoming"
+---
+
+<Steps>
+  <Step title="Configure AndroidManifest.xml">
+    Open `android/app/src/main/AndroidManifest.xml` and add the `INTERNET` permission and set `launchMode` to `singleInstance` on your `MainActivity`.
+
+    ```xml
+    <manifest ...>
+        ...
+        <!-- Required to load images from the internet -->
+        <uses-permission android:name="android.permission.INTERNET"/>
+
+        <application ...>
+            <activity ...
+                android:name=".MainActivity"
+                android:launchMode="singleInstance"><!-- add this -->
+            ...
+        </application>
+    </manifest>
+    ```
+
+    <Warning>
+      `singleInstance` is required to ensure the incoming call screen is shown correctly when the app is in the background or terminated. Without it, a second instance of your activity may be launched, breaking the call UI.
+    </Warning>
+  </Step>
+
+  <Step title="Add ProGuard rules">
+    Add the following rule to your `android/app/proguard-rules.pro` file to prevent key obfuscation from stripping plugin internals:
+
+    ```
+    -keep class com.hiennv.flutter_callkit_incoming.** { *; }
+    ```
+
+    <Note>
+      ProGuard rules are required when building a release APK or App Bundle. Without this rule, obfuscation may remove or rename classes used by the plugin, causing runtime crashes.
+    </Note>
+  </Step>
+
+  <Step title="Request notification permission (Android 13+)">
+    On Android 13 (API 33) and above, you must request the `POST_NOTIFICATIONS` permission before calling `showCallkitIncoming`. Use `requestNotificationPermission` to prompt the user:
+
+    ```dart
+    await FlutterCallkitIncoming.requestNotificationPermission({
+      "title": "Notification permission",
+      "rationaleMessagePermission": "Notification permission is required, to show notification.",
+      "postNotificationMessageRequired": "Notification permission is required, Please allow notification permission from setting."
+    });
+    ```
+
+    <Note>
+      You can also use the `requestPermission` method from `firebase_messaging` if your project already integrates Firebase Cloud Messaging.
+    </Note>
+  </Step>
+
+  <Step title="Request full-screen intent permission (Android 14+)">
+    Starting with Android 14 (API 34), apps must explicitly hold the `USE_FULL_SCREEN_INTENT` permission to display non-dismissable full-screen notifications. Use the following APIs to check and request the permission:
+
+    ```dart
+    // Check if full-screen intent is allowed
+    await FlutterCallkitIncoming.canUseFullScreenIntent();
+
+    // Request full-screen intent permission
+    await FlutterCallkitIncoming.requestFullIntentPermission();
+    ```
+
+    <Warning>
+      In Android 14+, non-dismissable full-screen notifications behave differently from earlier versions. If `USE_FULL_SCREEN_INTENT` permission is not granted, the incoming call screen will not appear on the lock screen. Make sure to call `requestFullIntentPermission()` and set `isShowFullLockedScreen: true` in your `AndroidParams`.
+    </Warning>
+  </Step>
+
+  <Step title="Ensure Java SDK 17 or higher">
+    Version 2.5.0 and later of this plugin require Java SDK 17 or higher. Verify your Android project is configured to use a compatible JDK.
+
+    In your `android/app/build.gradle`, confirm that the compile options target Java 17:
+
+    ```kotlin
+    android {
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
+    }
+    ```
+
+    <Note>
+      If you are using Android Studio, you can verify and change the JDK version under **Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK**.
+    </Note>
+  </Step>
+</Steps>

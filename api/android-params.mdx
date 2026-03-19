@@ -1,0 +1,120 @@
+---
+title: "AndroidParams"
+description: "Android-specific configuration for call UI and notifications"
+---
+
+`AndroidParams` controls the appearance and behaviour of the custom incoming call UI and notifications on Android. Pass an instance to the `android` field of [CallKitParams](/api/call-kit-params).
+
+```dart
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+
+const android = AndroidParams(
+  isCustomNotification: true,
+  backgroundColor: '#0955fa',
+  backgroundUrl: 'https://example.com/bg.jpg',
+  actionColor: '#4CAF50',
+  textColor: '#ffffff',
+  ringtonePath: 'ringtone_default',
+);
+```
+
+## Constructor
+
+```dart
+const AndroidParams({
+  bool? isCustomNotification,
+  bool? isCustomSmallExNotification,
+  bool? isShowLogo,
+  String? logoUrl,
+  bool? isShowCallID,
+  String? ringtonePath,
+  String? backgroundColor,
+  String? backgroundUrl,
+  String? actionColor,
+  String? textColor,
+  String? incomingCallNotificationChannelName,
+  String? missedCallNotificationChannelName,
+  bool? isShowFullLockedScreen,
+  bool? isImportant,
+  bool? isBot,
+})
+```
+
+## Fields
+
+### Notification style
+
+<ParamField path="isCustomNotification" type="bool?" default="false">
+  When `true`, the plugin renders a fully custom notification layout instead of the system default. Recommended for a consistent look across all Android versions.
+</ParamField>
+
+<ParamField path="isCustomSmallExNotification" type="bool?" default="false">
+  When `true`, uses a compact custom notification layout on devices where the standard custom notification is clipped. Enable this as a fallback if `isCustomNotification` content is cut off on certain devices.
+</ParamField>
+
+### Branding and visuals
+
+<ParamField path="isShowLogo" type="bool?" default="false">
+  When `true`, displays the app logo inside the full-screen incoming call UI. The logo image must be placed at `/android/app/src/main/res/drawable-xxxhdpi/ic_logo.png`.
+</ParamField>
+
+<ParamField path="logoUrl" type="String?">
+  URL or asset path of the logo image shown inside the full-screen UI. Accepts `http://...`, `https://...`, or `assets/path/to/image.png`. Only used when `isShowLogo` is `true`.
+</ParamField>
+
+<ParamField path="isShowCallID" type="bool?" default="false">
+  When `true`, displays the call `id` (UUID) inside both the full-screen UI and the notification.
+</ParamField>
+
+<ParamField path="backgroundColor" type="String?" default="#0955fa">
+  Background color of the full-screen incoming call UI. Accepts a hex color string (e.g. `"#0955fa"`).
+</ParamField>
+
+<ParamField path="backgroundUrl" type="String?">
+  Image shown as the background of the full-screen incoming call UI. Accepts `http://...`, `https://...`, or `assets/path/to/image.png`. When set, this takes visual precedence over `backgroundColor`.
+</ParamField>
+
+<ParamField path="actionColor" type="String?" default="#4CAF50">
+  Hex color applied to action buttons and text inside the notification (e.g. Accept / Decline button labels).
+</ParamField>
+
+<ParamField path="textColor" type="String?" default="#ffffff">
+  Hex color applied to text displayed in the full-screen incoming call UI.
+</ParamField>
+
+### Ringtone
+
+<ParamField path="ringtonePath" type="String?" default="system_ringtone_default">
+  File name (without extension) of the ringtone played for incoming calls. Place the audio file at `/android/app/src/main/res/raw/<name>.mp3`.
+
+  The special value `system_ringtone_default` plays the device's default ringtone.
+
+  ```
+  // File: /android/app/src/main/res/raw/ringtone_default.mp3
+  ringtonePath: 'ringtone_default'
+  ```
+</ParamField>
+
+### Notification channels
+
+<ParamField path="incomingCallNotificationChannelName" type="String?" default="Incoming call">
+  Android notification channel name used for incoming call notifications. Displayed to the user in system notification settings.
+</ParamField>
+
+<ParamField path="missedCallNotificationChannelName" type="String?" default="Missed call">
+  Android notification channel name used for missed call notifications. Displayed to the user in system notification settings.
+</ParamField>
+
+### Lock screen and priority
+
+<ParamField path="isShowFullLockedScreen" type="bool?" default="true">
+  When `true`, the full-screen incoming call UI is shown on the lock screen. On Android 14+ you must also call `requestFullIntentPermission` and `canUseFullScreenIntent` to ensure the permission is granted.
+</ParamField>
+
+<ParamField path="isImportant" type="bool?">
+  Marks the caller as important to the device user, based on interaction frequency. Maps to the `isImportant` field of Android's [`Person`](https://developer.android.com/reference/androidx/core/app/Person#isImportant()) API. Affects notification ranking.
+</ParamField>
+
+<ParamField path="isBot" type="bool?">
+  Marks the caller as an automated agent or bot. Maps to the `isBot` field of Android's [`Person`](https://developer.android.com/reference/androidx/core/app/Person#isBot()) API. Used primarily to identify automated tooling to the system.
+</ParamField>

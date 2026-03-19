@@ -1,0 +1,66 @@
+---
+title: "Installation"
+description: "Add flutter_callkit_incoming to your Flutter project"
+---
+
+## Install the package
+
+<CodeGroup>
+
+```bash flutter pub add
+flutter pub add flutter_callkit_incoming
+```
+
+```yaml pubspec.yaml
+dependencies:
+  flutter_callkit_incoming: ^3.0.0
+```
+
+</CodeGroup>
+
+After editing `pubspec.yaml` manually, run:
+
+```bash
+flutter pub get
+```
+
+## Java SDK requirement (Android)
+
+<Warning>
+  Version **2.5.0 and later** require **Java SDK 17 or higher** for the Android build. Older JDK versions will cause a build failure.
+</Warning>
+
+Verify your active Java version:
+
+```bash
+java -version
+```
+
+If you manage multiple JDK versions, switch to Java 17 before building:
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+```
+
+## Import the library
+
+Add the following import wherever you need to interact with the plugin:
+
+```dart
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+```
+
+This single import exposes `FlutterCallkitIncoming`, `CallKitParams`, `AndroidParams`, `IOSParams`, `NotificationParams`, `CallEvent`, and the `Event` enum.
+
+## Platform configuration required
+
+Installing the package is not enough on its own — both platforms need additional configuration before the incoming call UI will appear.
+
+<CardGroup cols={2}>
+  <Card title="Android setup" icon="android" href="/setup/android">
+    Add the `INTERNET` permission, set `singleInstance` launch mode, and add the ProGuard keep rule.
+  </Card>
+  <Card title="iOS setup" icon="apple" href="/setup/ios">
+    Add `UIBackgroundModes` to `Info.plist` and configure PushKit in `AppDelegate.swift`.
+  </Card>
+</CardGroup>

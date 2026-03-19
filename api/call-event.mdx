@@ -1,0 +1,158 @@
+---
+title: "CallEvent & Event"
+description: "Call lifecycle event types and the event object structure"
+---
+
+The `onEvent` stream on `FlutterCallkitIncoming` emits `CallEvent` objects whenever a call lifecycle action occurs. Each event carries an `Event` enum value that identifies the action and a `body` map with call-specific data.
+
+## CallEvent class
+
+```dart
+class CallEvent {
+  Event event;
+  dynamic body;
+
+  CallEvent(this.body, this.event);
+}
+```
+
+### Fields
+
+<ResponseField name="event" type="Event" required>
+  The call lifecycle action that occurred. See the [Event enum](#event-enum) table below.
+</ResponseField>
+
+<ResponseField name="body" type="Map&lt;String, dynamic&gt;">
+  A map containing call data associated with the event. The contents mirror the fields of the originating [CallKitParams](/api/call-kit-params) (e.g. `id`, `nameCaller`, `handle`, `extra`, etc.).
+
+  ```dart
+  FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
+    if (event == null) return;
+    final callId = event.body['id'] as String?;
+    final extra  = event.body['extra'] as Map<String, dynamic>?;
+  });
+  ```
+</ResponseField>
+
+---
+
+## Event enum
+
+All enum values are defined in `call_event.dart`. The internal event name string is the value used over the platform channel and matches `Event.name` at runtime.
+
+| Enum value | Internal event name | Platform | Description |
+|---|---|---|---|
+| `actionDidUpdateDevicePushTokenVoip` | `...DID_UPDATE_DEVICE_PUSH_TOKEN_VOIP` | iOS only | Device VoIP push token has been updated. Read the new token from `body`. |
+| `actionCallIncoming` | `...ACTION_CALL_INCOMING` | Both | Plugin received and displayed an incoming call. |
+| `actionCallStart` | `...ACTION_CALL_START` | Both | An outgoing call was started via `startCall`. |
+| `actionCallAccept` | `...ACTION_CALL_ACCEPT` | Both | The user accepted an incoming call. |
+| `actionCallDecline` | `...ACTION_CALL_DECLINE` | Both | The user declined an incoming call. |
+| `actionCallEnded` | `...ACTION_CALL_ENDED` | Both | The call ended (by either party). |
+| `actionCallTimeout` | `...ACTION_CALL_TIMEOUT` | Both | The incoming call timed out without being answered (missed call). |
+| `actionCallConnected` | `...ACTION_CALL_CONNECTED` | Both | The call was marked as connected via `setCallConnected`. |
+| `actionCallCallback` | `...ACTION_CALL_CALLBACK` | Android only | User tapped the "Call back" action in a missed-call notification. |
+| `actionCallToggleHold` | `...ACTION_CALL_TOGGLE_HOLD` | iOS only | The user toggled the hold state from the CallKit UI. |
+| `actionCallToggleMute` | `...ACTION_CALL_TOGGLE_MUTE` | iOS only | The user toggled the mute state from the CallKit UI. |
+| `actionCallToggleDmtf` | `...ACTION_CALL_TOGGLE_DMTF` | iOS only | The user interacted with the DTMF keypad in the CallKit UI. |
+| `actionCallToggleGroup` | `...ACTION_CALL_TOGGLE_GROUP` | iOS only | The user toggled call grouping in the CallKit UI. |
+| `actionCallToggleAudioSession` | `...ACTION_CALL_TOGGLE_AUDIO_SESSION` | iOS only | The audio session was toggled by CallKit. |
+| `actionCallCustom` | `...ACTION_CALL_CUSTOM` | Both | A custom event was sent from native code via `sendEventCustom`. |
+
+<Note>
+The full internal event name prefix is `com.hiennv.flutter_callkit_incoming.` — for example, `com.hiennv.flutter_callkit_incoming.ACTION_CALL_INCOMING`. The truncated `...` in the table above represents this prefix.
+</Note>
+
+---
+
+## Full usage example
+
+```dart
+import 'dart:async';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+
+StreamSubscription<CallEvent?>? _callEventSubscription;
+
+void initCallEvents() {
+  _callEventSubscription = FlutterCallkitIncoming.onEvent.listen(
+    (CallEvent? event) {
+      if (event == null) return;
+
+      switch (event.event) {
+        case Event.actionCallIncoming:
+          // Received an incoming call — event.body contains call details
+          final callId = event.body['id'] as String?;
+          print('Incoming call: $callId');
+          break;
+
+        case Event.actionCallStart:
+          // Started an outgoing call — show your calling screen
+          break;
+
+        case Event.actionCallAccept:
+          // User accepted the call — initiate WebRTC/P2P connection
+          break;
+
+        case Event.actionCallDecline:
+          // User declined the call — notify your server
+          break;
+
+        case Event.actionCallEnded:
+          // Call ended — clean up resources
+          break;
+
+        case Event.actionCallTimeout:
+          // Incoming call timed out (missed call)
+          break;
+
+        case Event.actionCallConnected:
+          // WebRTC connected — call timer started
+          break;
+
+        case Event.actionCallCallback:
+          // Android: user tapped "Call back" in missed call notification
+          break;
+
+        case Event.actionCallToggleHold:
+          // iOS only: hold state changed
+          final isOnHold = event.body['isOnHold'] as bool? ?? false;
+          print('On hold: $isOnHold');
+          break;
+
+        case Event.actionCallToggleMute:
+          // iOS only: mute state changed
+          final isMuted = event.body['isMuted'] as bool? ?? false;
+          print('Muted: $isMuted');
+          break;
+
+        case Event.actionCallToggleDmtf:
+          // iOS only: DTMF keypad interaction
+          break;
+
+        case Event.actionCallToggleGroup:
+          // iOS only: call grouping toggled
+          break;
+
+        case Event.actionCallToggleAudioSession:
+          // iOS only: audio session toggled by CallKit
+          break;
+
+        case Event.actionDidUpdateDevicePushTokenVoip:
+          // iOS only: VoIP push token updated
+          final token = event.body['deviceTokenVoIP'] as String?;
+          print('New VoIP token: $token');
+          break;
+
+        case Event.actionCallCustom:
+          // Custom event sent from native code
+          print('Custom event body: ${event.body}');
+          break;
+      }
+    },
+  );
+}
+
+void disposeCallEvents() {
+  _callEventSubscription?.cancel();
+  _callEventSubscription = null;
+}
+```

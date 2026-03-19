@@ -1,97 +1,125 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Flutter Callkit Incoming"
+description: "A Flutter plugin to display native incoming call UI on Android and iOS (CallKit), with full VoIP push support and call lifecycle management."
 ---
 
-## Setting up
-
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Add the plugin to your Flutter project and configure dependencies.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Show your first incoming call screen in under 5 minutes.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Android Setup" icon="android" href="/setup/android">
+    Configure AndroidManifest.xml, permissions, and proguard rules.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="iOS Setup" icon="apple" href="/setup/ios">
+    Configure Info.plist, CallKit entitlements, and AppDelegate.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What is Flutter Callkit Incoming?
 
-Everything you need to create world-class documentation.
+Flutter Callkit Incoming is a Flutter plugin that shows a native incoming call UI when your app receives a VoIP call. On iOS it uses Apple's CallKit framework for a system-level call screen. On Android it renders a custom full-screen notification that works on the lock screen.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+The plugin handles the full call lifecycle — from showing the ringing UI to accepting, declining, ending, holding, and muting calls — and fires Dart events for each action so your app can react accordingly.
 
-## Need inspiration?
+## Key features
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<CardGroup cols={2}>
+  <Card title="Native incoming call UI" icon="phone-incoming">
+    iOS uses the native CallKit screen. Android shows a full-screen custom notification with ringtone and vibration.
+  </Card>
+  <Card title="Full call lifecycle" icon="arrow-progress">
+    Handle accept, decline, end, timeout, hold, mute, DTMF, and audio session events via a single Dart stream.
+  </Card>
+  <Card title="VoIP PushKit (iOS)" icon="bell">
+    Wake your app from a terminated state when a VoIP push arrives using Apple's PushKit framework.
+  </Card>
+  <Card title="Outgoing calls" icon="phone-outgoing">
+    Start outgoing calls that appear in the iOS Phone app's recents list and fire the same lifecycle events.
+  </Card>
+  <Card title="Missed call notifications" icon="phone-missed">
+    Show a missed call notification on both platforms with a configurable callback action.
+  </Card>
+  <Card title="Native integration" icon="code">
+    Initiate calls directly from Swift, Kotlin, or Objective-C without going through Dart.
+  </Card>
+</CardGroup>
+
+## Platform support
+
+| Platform | Min version | Notes |
+|----------|-------------|-------|
+| Android  | API 21+     | Custom full-screen notification UI |
+| iOS      | iOS 10+     | Native CallKit framework — real device only |
+
+<Warning>
+  iOS CallKit does **not** work on the simulator. Always test incoming calls on a real iOS device.
+</Warning>
+
+## Quick example
+
+```dart
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+
+// Show an incoming call
+final params = CallKitParams(
+  id: '44d915e1-5ff4-4bed-bf13-c423048ec97a',
+  nameCaller: 'Jane Smith',
+  appName: 'MyApp',
+  handle: '+1 555 123 4567',
+  type: 0, // 0 = audio, 1 = video
+  duration: 30000,
+  android: const AndroidParams(
+    isCustomNotification: true,
+    backgroundColor: '#0955fa',
+    actionColor: '#4CAF50',
+  ),
+  ios: const IOSParams(
+    handleType: 'generic',
+    supportsVideo: false,
+  ),
+);
+await FlutterCallkitIncoming.showCallkitIncoming(params);
+
+// Listen for call events
+FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
+  switch (event?.event) {
+    case Event.actionCallAccept:
+      // Connect your WebRTC/P2P session
+      break;
+    case Event.actionCallDecline:
+      // Notify your server
+      break;
+    case Event.actionCallEnded:
+      // Clean up
+      break;
+    default:
+      break;
+  }
+});
+```
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install the package
+  </Card>
+  <Card title="Android setup" icon="android" href="/setup/android">
+    Configure Android
+  </Card>
+  <Card title="iOS setup" icon="apple" href="/setup/ios">
+    Configure iOS
+  </Card>
+  <Card title="Show incoming call" icon="phone-incoming" href="/guides/show-incoming-call">
+    Display a call screen
+  </Card>
+  <Card title="Call events" icon="bolt" href="/guides/call-events">
+    React to user actions
+  </Card>
+  <Card title="API reference" icon="code" href="/api/flutter-callkit-incoming">
+    Full API docs
+  </Card>
+</CardGroup>

@@ -1,0 +1,155 @@
+---
+title: "Native integration"
+description: "Initiate calls from Swift, Kotlin, or Objective-C native code"
+---
+
+You can trigger `showCallkitIncoming` directly from native iOS or Android code — for example inside a PushKit VoIP handler — without going through the Dart layer.
+
+## Show an incoming call from native code
+
+<Tabs>
+  <Tab title="Swift">
+    **Using a dictionary (recommended for VoIP push payloads):**
+
+    ```swift
+    var info = [String: Any?]()
+    info["id"] = "44d915e1-5ff4-4bed-bf13-c423048ec97a"
+    info["nameCaller"] = "Hien Nguyen"
+    info["handle"] = "0123456789"
+    info["type"] = 1
+    // ... set more data
+    SwiftFlutterCallkitIncomingPlugin.sharedInstance?.showCallkitIncoming(
+        flutter_callkit_incoming.Data(args: info),
+        fromPushKit: true
+    )
+    ```
+
+    **Using the typed initialiser:**
+
+    ```swift
+    let data = flutter_callkit_incoming.Data(
+        id: "44d915e1-5ff4-4bed-bf13-c423048ec97a",
+        nameCaller: "Hien Nguyen",
+        handle: "0123456789",
+        type: 0
+    )
+    data.nameCaller = "Johnny"
+    data.extra = ["user": "abc@123", "platform": "ios"]
+    // ... set more data
+    SwiftFlutterCallkitIncomingPlugin.sharedInstance?.showCallkitIncoming(data, fromPushKit: true)
+    ```
+
+    <Warning>
+      Always call `completion()` at the end of `pushRegistry(_:didReceiveIncomingPushWith:for:completion:)`. If you do not, the system may terminate the app when the next VoIP push arrives.
+
+      ```swift
+      // Option 1: call immediately
+      completion()
+
+      // Option 2: call after a short delay (gives CallKit time to present the UI)
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { completion() }
+      ```
+    </Warning>
+  </Tab>
+
+  <Tab title="Kotlin">
+    ```kotlin
+    FlutterCallkitIncomingPlugin.getInstance().showIncomingNotification(...)
+    ```
+
+    Replace `...` with a `Bundle` containing the call data (id, nameCaller, handle, type, etc.) using the same keys as the Dart API.
+  </Tab>
+
+  <Tab title="Objective-C">
+    ```objc
+    #if __has_include(<flutter_callkit_incoming/flutter_callkit_incoming-Swift.h>)
+    #import <flutter_callkit_incoming/flutter_callkit_incoming-Swift.h>
+    #else
+    #import "flutter_callkit_incoming-Swift.h"
+    #endif
+
+    Data *data = [[Data alloc] initWithId:@"44d915e1-5ff4-4bed-bf13-c423048ec97a"
+                               nameCaller:@"Hien Nguyen"
+                                   handle:@"0123456789"
+                                     type:1];
+    [data setNameCaller:@"Johnny"];
+    [data setExtra:@{ @"userId": @"HelloXXXX", @"key2": @"value2" }];
+    // ... set more data
+    [SwiftFlutterCallkitIncomingPlugin.sharedInstance
+        showCallkitIncoming:data
+        fromPushKit:YES];
+    ```
+  </Tab>
+</Tabs>
+
+## Native event callbacks (Android)
+
+On Android you can register a `CallkitEventCallback` in your `MainActivity` to respond to accept and decline actions directly in Kotlin, before the Flutter engine is fully started.
+
+```kotlin
+class MainActivity : FlutterActivity() {
+
+    private var callkitEventCallback = object : CallkitEventCallback {
+        override fun onCallEvent(event: CallkitEventCallback.CallEvent, callData: Bundle) {
+            when (event) {
+                CallkitEventCallback.CallEvent.ACCEPT -> {
+                    // Handle accept
+                }
+                CallkitEventCallback.CallEvent.DECLINE -> {
+                    // Handle decline
+                }
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        FlutterCallkitIncomingPlugin.registerEventCallback(callkitEventCallback)
+    }
+
+    override fun onDestroy() {
+        FlutterCallkitIncomingPlugin.unregisterEventCallback(callkitEventCallback)
+        super.onDestroy()
+    }
+}
+```
+
+## Sending custom events from native code
+
+You can fire a custom event to the Dart `onEvent` stream from native code. The event will arrive as `Event.actionCallCustom` in Flutter.
+
+<Tabs>
+  <Tab title="Swift">
+    ```swift
+    SwiftFlutterCallkitIncomingPlugin.sharedInstance?.sendEventCustom(
+        body: ["customKey": "customValue"]
+    )
+    ```
+  </Tab>
+
+  <Tab title="Kotlin">
+    ```kotlin
+    FlutterCallkitIncomingPlugin.getInstance().sendEventCustom(body: Map<String, Any>)
+    ```
+  </Tab>
+</Tabs>
+
+In Dart, handle the custom event:
+
+```dart
+FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
+  if (event?.event == Event.actionCallCustom) {
+    final body = event!.body as Map<String, dynamic>;
+    print('Custom event received: $body');
+  }
+});
+```
+
+<CardGroup cols={2}>
+  <Card title="Call events" icon="bolt" href="/guides/call-events">
+    Full reference for all Dart-side call events including actionCallCustom.
+  </Card>
+  <Card title="Show incoming call" icon="phone-incoming" href="/guides/show-incoming-call">
+    Configure and display the native incoming call screen from Dart.
+  </Card>
+</CardGroup>

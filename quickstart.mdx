@@ -1,80 +1,197 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Show your first incoming call screen in minutes"
 ---
 
-## Get started in three steps
+This guide takes you from zero to a working incoming call screen in your Flutter app.
 
-Get your documentation site running locally and make your first customization.
+<Steps>
+  <Step title="Install the package">
+    <CodeGroup>
 
-### Step 1: Set up your local environment
+    ```bash flutter pub add
+    flutter pub add flutter_callkit_incoming
+    ```
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    ```yaml pubspec.yaml
+    dependencies:
+      flutter_callkit_incoming: ^3.0.0
+    ```
 
-### Step 2: Deploy your changes
+    </CodeGroup>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    <Warning>
+      Version 2.5.0 and later require **Java SDK 17+** for the Android build. Verify with `java -version`.
+    </Warning>
+  </Step>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Step title="Configure Android">
+    Add the `INTERNET` permission and set `singleInstance` launch mode in `android/app/src/main/AndroidManifest.xml`:
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    ```xml AndroidManifest.xml
+    <manifest ...>
+        <!-- Required to load avatars/backgrounds from URLs -->
+        <uses-permission android:name="android.permission.INTERNET"/>
 
-### Step 3: Go live
+        <application ...>
+            <activity
+                android:name=".MainActivity"
+                android:launchMode="singleInstance">
+                <!-- singleInstance is required for the call screen to show correctly -->
+            </activity>
+        </application>
+    </manifest>
+    ```
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    Add the ProGuard keep rule to `android/app/proguard-rules.pro`:
 
-## Next steps
+    ```
+    -keep class com.hiennv.flutter_callkit_incoming.** { *; }
+    ```
+  </Step>
 
-Now that you have your docs running, explore these key features:
+  <Step title="Configure iOS">
+    Add the required background modes to `ios/Runner/Info.plist`:
 
-<CardGroup cols={2}>
+    ```xml Info.plist
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>voip</string>
+        <string>remote-notification</string>
+    </array>
+    ```
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+    <Warning>
+      iOS CallKit only works on a **real device**. The simulator cannot display the CallKit incoming call screen.
+    </Warning>
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+    For full iOS setup including AppDelegate configuration, see the [iOS setup guide](/setup/ios).
+  </Step>
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+  <Step title="Show an incoming call">
+    Import the plugin and call `showCallkitIncoming` with a `CallKitParams` object:
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+    ```dart
+    import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+    import 'package:uuid/uuid.dart';
 
+    final String currentUuid = const Uuid().v4();
+
+    CallKitParams callKitParams = CallKitParams(
+      id: currentUuid,
+      nameCaller: 'Hien Nguyen',
+      appName: 'Callkit',
+      avatar: 'https://i.pravatar.cc/100',
+      handle: '0123456789',
+      type: 0, // 0 = audio, 1 = video
+      textAccept: 'Accept',
+      textDecline: 'Decline',
+      missedCallNotification: const NotificationParams(
+        showNotification: true,
+        isShowCallback: true,
+        subtitle: 'Missed call',
+        callbackText: 'Call back',
+      ),
+      duration: 30000,
+      extra: <String, dynamic>{'userId': '1a2b3c4d'},
+      android: const AndroidParams(
+        isCustomNotification: true,
+        ringtonePath: 'system_ringtone_default',
+        backgroundColor: '#0955fa',
+        actionColor: '#4CAF50',
+        textColor: '#ffffff',
+        incomingCallNotificationChannelName: 'Incoming Call',
+        missedCallNotificationChannelName: 'Missed Call',
+      ),
+      ios: const IOSParams(
+        iconName: 'CallKitLogo',
+        handleType: 'generic',
+        supportsVideo: true,
+        maximumCallGroups: 2,
+        maximumCallsPerCallGroup: 1,
+        supportsDTMF: true,
+        supportsHolding: true,
+        ringtonePath: 'system_ringtone_default',
+      ),
+    );
+    await FlutterCallkitIncoming.showCallkitIncoming(callKitParams);
+    ```
+
+    <Note>
+      The `id` field must be a valid UUID. Use the [uuid](https://pub.dev/packages/uuid) package to generate one.
+    </Note>
+
+    <Note>
+      When using Firebase Cloud Messaging to trigger `showCallkitIncoming` in a background handler, annotate the handler with `@pragma('vm:entry-point')`.
+    </Note>
+  </Step>
+
+  <Step title="Listen for call events">
+    Subscribe to the `onEvent` stream to handle user actions:
+
+    ```dart
+    FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
+      switch (event?.event) {
+        case Event.actionCallIncoming:
+          // Received an incoming call
+          break;
+        case Event.actionCallStart:
+          // Started an outgoing call
+          break;
+        case Event.actionCallAccept:
+          // User accepted the call — connect your WebRTC/P2P session here
+          break;
+        case Event.actionCallDecline:
+          // User declined the call
+          break;
+        case Event.actionCallEnded:
+          // Call ended
+          break;
+        case Event.actionCallTimeout:
+          // Call timed out (missed)
+          break;
+        case Event.actionCallCallback:
+          // User tapped "Call back" in missed call notification (Android)
+          break;
+        case Event.actionCallToggleHold:
+          // iOS only — hold toggled
+          break;
+        case Event.actionCallToggleMute:
+          // iOS only — mute toggled
+          break;
+        default:
+          break;
+      }
+    });
+    ```
+
+    After the call is accepted and your WebRTC connection is established, mark the call as connected:
+
+    ```dart
+    await FlutterCallkitIncoming.setCallConnected(currentUuid);
+    ```
+  </Step>
+</Steps>
+
+## What's next
+
+<CardGroup cols={3}>
+  <Card title="Android setup" icon="android" href="/setup/android">
+    Full Android configuration including permission flows
+  </Card>
+  <Card title="iOS setup" icon="apple" href="/setup/ios">
+    AppDelegate and PushKit configuration
+  </Card>
+  <Card title="Show incoming call" icon="phone-incoming" href="/guides/show-incoming-call">
+    All options for the incoming call screen
+  </Card>
+  <Card title="Call events" icon="bolt" href="/guides/call-events">
+    Complete event reference
+  </Card>
+  <Card title="Outgoing calls" icon="phone-outgoing" href="/guides/outgoing-call">
+    Start and manage outgoing calls
+  </Card>
+  <Card title="API reference" icon="code" href="/api/flutter-callkit-incoming">
+    Full Dart API documentation
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

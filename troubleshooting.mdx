@@ -1,0 +1,255 @@
+---
+title: "Troubleshooting"
+description: "Common issues and solutions for Flutter Callkit Incoming"
+---
+
+<AccordionGroup>
+
+  <Accordion title="iOS CallKit not working">
+    iOS CallKit only works on a **real device**, not the simulator. The CallKit framework is not supported in the iOS Simulator.
+
+    <Warning>
+      Always test CallKit functionality on a physical iOS device. The simulator will not display incoming call UI.
+    </Warning>
+
+    Confirm your build target is set to a physical iOS device before running your app.
+  </Accordion>
+
+  <Accordion title="Call screen not showing on Android lock screen">
+    There are a few things to check:
+
+    1. Ensure `isShowFullLockedScreen` is set to `true` in your `AndroidParams`:
+
+    ```dart
+    android: const AndroidParams(
+      isShowFullLockedScreen: true,
+      // ...
+    )
+    ```
+
+    2. On **Android 14+**, you must explicitly request the full-screen intent permission before showing the call screen:
+
+    ```dart
+    await FlutterCallkitIncoming.requestFullIntentPermission();
+    ```
+
+    You can also check whether the permission is already granted:
+
+    ```dart
+    await FlutterCallkitIncoming.canUseFullScreenIntent();
+    ```
+
+    3. Ensure your `MainActivity` uses `singleInstance` launch mode in `AndroidManifest.xml`:
+
+    ```xml
+    <activity
+        android:name=".MainActivity"
+        android:launchMode="singleInstance">
+    ```
+
+    <Note>
+      Without `singleInstance`, the call screen may not appear correctly over the lock screen.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Ringtone not playing on Android">
+    Custom ringtones must be placed in the correct directory and referenced by name without the file extension.
+
+    1. Place your MP3 file at:
+
+    ```
+    /android/app/src/main/res/raw/<ringtone_name>.mp3
+    ```
+
+    2. Set `ringtonePath` to the filename **without** the `.mp3` extension:
+
+    ```dart
+    android: const AndroidParams(
+      ringtonePath: 'ringtone_default', // corresponds to ringtone_default.mp3
+    )
+    ```
+
+    3. To use the device's default system ringtone instead, set:
+
+    ```dart
+    android: const AndroidParams(
+      ringtonePath: 'system_ringtone_default',
+    )
+    ```
+
+    <Tip>
+      `system_ringtone_default` is the default value and uses whatever ringtone the user has set on their device.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Notification not shown on Android 13+">
+    Android 13 (API 33) requires the `POST_NOTIFICATIONS` runtime permission. You must call `requestNotificationPermission` **before** calling `showCallkitIncoming`:
+
+    ```dart
+    await FlutterCallkitIncoming.requestNotificationPermission({
+      "title": "Notification permission",
+      "rationaleMessagePermission":
+          "Notification permission is required, to show notification.",
+      "postNotificationMessageRequired":
+          "Notification permission is required, Please allow notification permission from setting."
+    });
+    ```
+
+    <Warning>
+      Skipping this step on Android 13+ will silently prevent incoming call notifications from appearing.
+    </Warning>
+
+    Alternatively, you can use `requestPermission` from the `firebase_messaging` package if you are already using Firebase Cloud Messaging.
+  </Accordion>
+
+  <Accordion title="App crashes when receiving VoIP push (iOS)">
+    When using PushKit, you **must** call `completion()` at the end of the `pushRegistry(_:didReceiveIncomingPushWith:for:completion:)` delegate method. Failing to do so causes iOS to terminate the app.
+
+    ```swift
+    func pushRegistry(
+        _ registry: PKPushRegistry,
+        didReceiveIncomingPushWith payload: PKPushPayload,
+        for type: PKPushType,
+        completion: @escaping () -> Void
+    ) {
+        // Show the incoming call
+        SwiftFlutterCallkitIncomingPlugin.sharedInstance?.showCallkitIncoming(data, fromPushKit: true)
+
+        // Always call completion — use asyncAfter if CallKit needs more time
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            completion()
+        }
+    }
+    ```
+
+    <Warning>
+      Not calling `completion()` in the PushKit delegate will cause the system to crash your app the next time a VoIP push is received.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="No audio after accepting call (WebRTC)">
+    When using WebRTC, you need to manually manage the `RTCAudioSession` by enabling and disabling it in response to the CallKit audio session callbacks.
+
+    In your `AppDelegate.swift`, implement the `didActivateAudioSession` and `didDeactivateAudioSession` callbacks provided by `CallkitIncomingAppDelegate`:
+
+    ```swift
+    func didActivateAudioSession(_ audioSession: AVAudioSession) {
+        RTCAudioSession.sharedInstance().audioSessionDidActivate(audioSession)
+        RTCAudioSession.sharedInstance().isAudioEnabled = true
+    }
+
+    func didDeactivateAudioSession(_ audioSession: AVAudioSession) {
+        RTCAudioSession.sharedInstance().audioSessionDidDeactivate(audioSession)
+        RTCAudioSession.sharedInstance().isAudioEnabled = false
+    }
+    ```
+
+    Also ensure that in `application(_:didFinishLaunchingWithOptions:)` you configure the audio session for manual use:
+
+    ```swift
+    RTCAudioSession.sharedInstance().useManualAudio = true
+    RTCAudioSession.sharedInstance().isAudioEnabled = false
+    ```
+
+    <Note>
+      See the iOS setup guide and the [AppDelegate.swift example](https://github.com/hiennguyen92/flutter_callkit_incoming/blob/master/example/ios/Runner/AppDelegate.swift) for the full configuration.
+    </Note>
+  </Accordion>
+
+  <Accordion title="ProGuard stripping classes on Android">
+    If you use ProGuard or R8 for release builds, plugin classes may be obfuscated or removed, causing runtime crashes.
+
+    Add the following rule to your `proguard-rules.pro` file:
+
+    ```
+    -keep class com.hiennv.flutter_callkit_incoming.** { *; }
+    ```
+
+    This prevents ProGuard from removing or renaming any class in the plugin package.
+  </Accordion>
+
+  <Accordion title="Build error on Android: Java version">
+    Starting from **v2.5.0**, the plugin requires **Java SDK 17 or higher**. If you see a build error related to JVM toolchain or Java version, update your `build.gradle`:
+
+    ```kotlin
+    kotlin {
+        jvmToolchain(17)
+    }
+    ```
+
+    Also ensure your local Java installation (used by Gradle) is version 17+. You can verify with:
+
+    ```bash
+    java -version
+    ```
+
+    <Warning>
+      Using Java 11 or lower with v2.5.0+ will cause a build-time error.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Missing call notification for iOS">
+    Missed call notifications (and showing notifications while the app is in the foreground) require `UNUserNotificationCenter` delegate setup in `AppDelegate.swift`.
+
+    Ensure you have the following in `application(_:didFinishLaunchingWithOptions:)`:
+
+    ```swift
+    if #available(iOS 10.0, *) {
+        UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
+    }
+    ```
+
+    And implement the corresponding delegate methods:
+
+    ```swift
+    // Show notification when app is in foreground
+    override func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        CallkitNotificationManager.shared.userNotificationCenter(
+            center,
+            willPresent: notification,
+            withCompletionHandler: completionHandler
+        )
+    }
+
+    // Handle callback action tapped in missed call notification
+    override func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        if response.actionIdentifier == CallkitNotificationManager.CALLBACK_ACTION {
+            let data = response.notification.request.content.userInfo as? [String: Any]
+            SwiftFlutterCallkitIncomingPlugin.sharedInstance?.sendCallbackEvent(data)
+        }
+        completionHandler()
+    }
+    ```
+
+    <Note>
+      See the iOS setup guide and the [AppDelegate.swift example](https://github.com/hiennguyen92/flutter_callkit_incoming/blob/master/example/ios/Runner/AppDelegate.swift) for full configuration.
+    </Note>
+  </Accordion>
+
+  <Accordion title="activeCalls() returns empty on iOS">
+    `activeCalls()` behaves differently per platform:
+
+    - **iOS**: Returns the list of currently active calls managed by CallKit (only their `id` field is populated). If no call is currently active in CallKit — for example, after a call has ended — the list will be empty.
+    - **Android**: Returns only the last call, regardless of its current state.
+
+    ```dart
+    final calls = await FlutterCallkitIncoming.activeCalls();
+    // iOS example output when a call is active:
+    // [{"id": "8BAA2B26-47AD-42C1-9197-1D75F662DF78"}]
+    // Returns [] if no call is currently active in CallKit.
+    ```
+
+    <Note>
+      Do not rely on `activeCalls()` to retrieve full call metadata on iOS. Store call parameters in your own app state when the call is initiated.
+    </Note>
+  </Accordion>
+
+</AccordionGroup>

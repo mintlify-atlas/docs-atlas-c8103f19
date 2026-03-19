@@ -1,0 +1,146 @@
+---
+title: "IOSParams"
+description: "iOS-specific configuration for CallKit"
+---
+
+`IOSParams` configures the native iOS CallKit integration. Pass an instance to the `ios` field of [CallKitParams](/api/call-kit-params).
+
+<Note>
+iOS CallKit only works on a real device. Testing on the simulator will not display the CallKit UI.
+</Note>
+
+```dart
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+
+const ios = IOSParams(
+  iconName: 'CallKitLogo',
+  handleType: 'generic',
+  supportsVideo: true,
+  maximumCallGroups: 2,
+  maximumCallsPerCallGroup: 1,
+  audioSessionMode: 'voiceChat',
+  audioSessionActive: true,
+  audioSessionPreferredSampleRate: 44100.0,
+  audioSessionPreferredIOBufferDuration: 0.005,
+  supportsDTMF: true,
+  supportsHolding: true,
+  supportsGrouping: false,
+  supportsUngrouping: false,
+  ringtonePath: 'system_ringtone_default',
+);
+```
+
+## Constructor
+
+```dart
+const IOSParams({
+  String? iconName,
+  String? handleType,
+  bool? supportsVideo,
+  int? maximumCallGroups,
+  int? maximumCallsPerCallGroup,
+  String? audioSessionMode,
+  bool? audioSessionActive,
+  double? audioSessionPreferredSampleRate,
+  double? audioSessionPreferredIOBufferDuration,
+  bool? configureAudioSession,
+  bool? supportsDTMF,
+  bool? supportsHolding,
+  bool? supportsGrouping,
+  bool? supportsUngrouping,
+  String? ringtonePath,
+})
+```
+
+## Fields
+
+### Appearance
+
+<ParamField path="iconName" type="String?" default="CallKitLogo">
+  Name of the image asset inside `Images.xcassets` used as the app icon in the CallKit UI. Defaults to `CallKitLogo`, which must exist in `Images.xcassets/CallKitLogo`.
+</ParamField>
+
+### Call handle
+
+<ParamField path="handleType" type="String?" default="generic">
+  Specifies how the `handle` value in [CallKitParams](/api/call-kit-params) is interpreted by CallKit. Accepted values:
+
+  | Value | Description |
+  |-------|-------------|
+  | `"generic"` | Any string identifier (recommended) |
+  | `"number"` | Phone number |
+  | `"email"` | Email address |
+
+  <Tip>Use `"generic"` for the most flexible and consistent CallKit display.</Tip>
+</ParamField>
+
+### Call capabilities
+
+<ParamField path="supportsVideo" type="bool?" default="true">
+  Whether the call supports video. When `true`, CallKit shows a video icon in the call UI.
+</ParamField>
+
+<ParamField path="supportsDTMF" type="bool?" default="true">
+  Whether the call supports DTMF (dial-tone multi-frequency) input — e.g. for phone menu navigation.
+</ParamField>
+
+<ParamField path="supportsHolding" type="bool?" default="true">
+  Whether the call can be placed on hold.
+</ParamField>
+
+<ParamField path="supportsGrouping" type="bool?" default="true">
+  Whether multiple calls can be grouped together into a call conference.
+</ParamField>
+
+<ParamField path="supportsUngrouping" type="bool?" default="true">
+  Whether a grouped call can be split back into individual calls.
+</ParamField>
+
+### Call groups
+
+<ParamField path="maximumCallGroups" type="int?" default="2">
+  Maximum number of simultaneous call groups allowed by CallKit. A call group is a set of calls that are handled together (e.g. a conference).
+</ParamField>
+
+<ParamField path="maximumCallsPerCallGroup" type="int?" default="1">
+  Maximum number of calls within a single call group.
+</ParamField>
+
+### Audio session
+
+<ParamField path="audioSessionMode" type="String?">
+  Sets the `AVAudioSession` mode applied when the call becomes active. Accepted values:
+
+  `nil` (default), `"gameChat"`, `"measurement"`, `"moviePlayback"`, `"spokenAudio"`, `"videoChat"`, `"videoRecording"`, `"voiceChat"`, `"voicePrompt"`
+
+  <Tip>For VoIP calls, `"voiceChat"` is usually the appropriate mode.</Tip>
+</ParamField>
+
+<ParamField path="audioSessionActive" type="bool?" default="true">
+  Whether to activate the audio session when the call is connected.
+</ParamField>
+
+<ParamField path="audioSessionPreferredSampleRate" type="double?" default="44100.0">
+  Preferred sample rate (Hz) for the `AVAudioSession`. Common values: `8000.0`, `16000.0`, `44100.0`, `48000.0`.
+</ParamField>
+
+<ParamField path="audioSessionPreferredIOBufferDuration" type="double?" default="0.005">
+  Preferred I/O buffer duration (seconds) for the `AVAudioSession`. Lower values reduce latency but increase CPU usage.
+</ParamField>
+
+<ParamField path="configureAudioSession" type="bool?">
+  When `false`, the plugin skips automatic `AVAudioSession` configuration so you can manage it manually (e.g. when using WebRTC's `RTCAudioSession`). Defaults to the plugin's internal behaviour when not set.
+</ParamField>
+
+### Ringtone
+
+<ParamField path="ringtonePath" type="String?" default="system_ringtone_default">
+  File name of a ringtone bundled with the Xcode project. Add the file to `/ios/Runner/` and include it in **Copy Bundle Resources** under Build Phases.
+
+  The special value `system_ringtone_default` uses the device's default ringtone.
+
+  ```
+  // File added to /ios/Runner/Ringtone.caf and included in Copy Bundle Resources
+  ringtonePath: 'Ringtone.caf'
+  ```
+</ParamField>

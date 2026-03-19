@@ -1,0 +1,141 @@
+---
+title: "CallKitParams"
+description: "Main configuration object for all call operations"
+---
+
+`CallKitParams` is the primary configuration object passed to most methods in `FlutterCallkitIncoming`. It contains the call identity, display options, platform-specific sub-configs, and any custom data you want attached to call events.
+
+```dart
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+
+const params = CallKitParams(
+  id: '44d915e1-5ff4-4bed-bf13-c423048ec97a',
+  nameCaller: 'Jane Doe',
+  handle: '0123456789',
+  type: 0,
+  duration: 30000,
+  android: AndroidParams(
+    backgroundColor: '#0955fa',
+    actionColor: '#4CAF50',
+  ),
+  ios: IOSParams(
+    handleType: 'generic',
+    supportsVideo: true,
+  ),
+);
+```
+
+## Constructor
+
+```dart
+const CallKitParams({
+  String? id,
+  String? nameCaller,
+  String? appName,
+  String? avatar,
+  String? handle,
+  int? type,
+  int? normalHandle,
+  int? duration,
+  String? textAccept,
+  String? textDecline,
+  NotificationParams? missedCallNotification,
+  NotificationParams? callingNotification,
+  Map<String, dynamic>? extra,
+  Map<String, dynamic>? headers,
+  AndroidParams? android,
+  IOSParams? ios,
+})
+```
+
+## Fields
+
+<ParamField path="id" type="String?" required>
+  Unique identifier for the call. Must be a valid UUID v4 string. Use the same UUID for all subsequent operations on the same call (mute, hold, end, etc.).
+
+  Use the [`uuid`](https://pub.dev/packages/uuid) package to generate one:
+
+  ```dart
+  final id = const Uuid().v4();
+  ```
+</ParamField>
+
+<ParamField path="nameCaller" type="String?">
+  Display name of the caller shown on the incoming call screen and in the system phone history.
+</ParamField>
+
+<ParamField path="appName" type="String?" deprecated>
+  Application name displayed inside the iOS CallKit UI. Defaults to the app's bundle display name.
+
+  <Note>Deprecated for iOS 14 and above — the system uses the app's display name automatically.</Note>
+</ParamField>
+
+<ParamField path="avatar" type="String?">
+  URL of the caller's avatar image displayed on the Android incoming call screen. Accepts `http://`, `https://`, or an `assets/` path.
+
+  <Note>Android only. Ignored on iOS.</Note>
+</ParamField>
+
+<ParamField path="handle" type="String?">
+  The caller's phone number, email address, or any other identifier. Displayed below the caller name on both platforms.
+</ParamField>
+
+<ParamField path="type" type="int?" default="0">
+  Call type:
+  - `0` — Audio call
+  - `1` — Video call
+</ParamField>
+
+<ParamField path="normalHandle" type="int?">
+  Numeric representation of the handle type used internally for CallKit routing.
+</ParamField>
+
+<ParamField path="duration" type="int?" default="30000">
+  How long (in milliseconds) to display the incoming call UI before automatically dismissing it as a missed call. Defaults to `30000` (30 seconds).
+</ParamField>
+
+<ParamField path="textAccept" type="String?" default="Accept">
+  Label for the accept/answer button on the Android incoming call screen.
+
+  <Note>Android only. iOS uses the system CallKit UI labels.</Note>
+</ParamField>
+
+<ParamField path="textDecline" type="String?" default="Decline">
+  Label for the decline/reject button on the Android incoming call screen.
+
+  <Note>Android only. iOS uses the system CallKit UI labels.</Note>
+</ParamField>
+
+<ParamField path="missedCallNotification" type="NotificationParams?">
+  Configuration for the missed-call notification shown when the incoming call times out or is not answered. See [NotificationParams](/api/notification-params).
+</ParamField>
+
+<ParamField path="callingNotification" type="NotificationParams?">
+  Configuration for the persistent notification shown while a call is in progress (outgoing or accepted). See [NotificationParams](/api/notification-params).
+</ParamField>
+
+<ParamField path="extra" type="Map<String, dynamic>?" default="{}">
+  Arbitrary key-value data that is attached to every [CallEvent](/api/call-event) emitted for this call. Use this to pass application-specific context (e.g. user IDs, session tokens).
+
+  ```dart
+  extra: {'userId': '1a2b3c4d', 'roomId': 'room-42'},
+  ```
+</ParamField>
+
+<ParamField path="headers" type="Map<String, dynamic>?" default="{}">
+  HTTP headers sent when loading remote images (avatar, background) on Android.
+
+  ```dart
+  headers: {'apiKey': 'Abc@123!', 'platform': 'flutter'},
+  ```
+
+  <Note>Android only.</Note>
+</ParamField>
+
+<ParamField path="android" type="AndroidParams?">
+  Android-specific UI and notification configuration. See [AndroidParams](/api/android-params).
+</ParamField>
+
+<ParamField path="ios" type="IOSParams?">
+  iOS CallKit configuration. See [IOSParams](/api/ios-params).
+</ParamField>

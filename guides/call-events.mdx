@@ -1,0 +1,141 @@
+---
+title: "Call events"
+description: "Listen and respond to call lifecycle events"
+---
+
+All call lifecycle events are delivered through the `FlutterCallkitIncoming.onEvent` broadcast stream. Subscribe to it as early as possible — ideally in `main()` or your root widget — so no events are missed while the app is running.
+
+## Subscribe to the event stream
+
+```dart
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+
+FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
+  switch (event!.event) {
+    case Event.actionCallIncoming:
+      // Received an incoming call
+      break;
+    case Event.actionCallStart:
+      // Started an outgoing call
+      // Show your calling screen in Flutter
+      break;
+    case Event.actionCallAccept:
+      // User accepted the incoming call
+      // Show your calling screen in Flutter
+      break;
+    case Event.actionCallDecline:
+      // User declined the incoming call
+      break;
+    case Event.actionCallEnded:
+      // Call ended (incoming or outgoing)
+      break;
+    case Event.actionCallTimeout:
+      // Incoming call timed out (missed)
+      break;
+    case Event.actionCallCallback:
+      // User tapped "Call back" in the missed call notification (Android)
+      break;
+    case Event.actionCallConnected:
+      // Call connected (WebRTC/P2P established)
+      break;
+    case Event.actionCallToggleHold:
+      // iOS only: hold state toggled
+      break;
+    case Event.actionCallToggleMute:
+      // iOS only: mute state toggled
+      break;
+    case Event.actionCallToggleDmtf:
+      // iOS only: DTMF tone sent
+      break;
+    case Event.actionCallToggleGroup:
+      // iOS only: call group toggled
+      break;
+    case Event.actionCallToggleAudioSession:
+      // iOS only: audio session state changed
+      break;
+    case Event.actionDidUpdateDevicePushTokenVoip:
+      // iOS only: VoIP push token has been updated
+      break;
+    case Event.actionCallCustom:
+      // Custom action fired from native code
+      break;
+  }
+});
+```
+
+## Event reference
+
+### Cross-platform events
+
+| Event | Description |
+|-------|-------------|
+| `actionCallIncoming` | An incoming call has been received and the call UI is shown. |
+| `actionCallStart` | An outgoing call has been started via `startCall`. |
+| `actionCallAccept` | The user accepted an incoming call. Navigate to your calling screen. |
+| `actionCallDecline` | The user declined an incoming call. |
+| `actionCallEnded` | An incoming or outgoing call was ended. |
+| `actionCallTimeout` | An incoming call was not answered within `duration` milliseconds. |
+| `actionCallConnected` | The call was connected (fired after `setCallConnected`). |
+| `actionCallCustom` | A custom event sent from native code via `sendEventCustom`. |
+
+### Android-only events
+
+| Event | Description |
+|-------|-------------|
+| `actionCallCallback` | The user tapped the "Call back" action in a missed call notification. |
+
+### iOS-only events
+
+| Event | Description |
+|-------|-------------|
+| `actionCallToggleHold` | The user toggled the hold state from the CallKit UI. |
+| `actionCallToggleMute` | The user toggled mute from the CallKit UI. |
+| `actionCallToggleDmtf` | A DTMF tone was sent from the CallKit UI. |
+| `actionCallToggleGroup` | The user grouped or ungrouped calls from the CallKit UI. |
+| `actionCallToggleAudioSession` | The audio session was activated or deactivated by CallKit. |
+| `actionDidUpdateDevicePushTokenVoip` | The device's VoIP push token changed. Store this token on your server to send future VoIP pushes. |
+
+## Reading event data
+
+Every `CallEvent` carries a `body` map containing the call parameters that were passed to `showCallkitIncoming` or `startCall`, including any `extra` data.
+
+```dart
+FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
+  if (event == null) return;
+
+  // Access call data from the event body
+  final body = event.body as Map<String, dynamic>;
+  final callId = body['id'] as String?;
+  final callerName = body['nameCaller'] as String?;
+  final extra = body['extra'] as Map<String, dynamic>?;
+
+  print('Event: ${event.event}, call id: $callId, caller: $callerName');
+});
+```
+
+## Background execution with Firebase
+
+When using Firebase Cloud Messaging to trigger calls, the background message handler runs in an isolate. Annotate it with `@pragma('vm:entry-point')` to prevent the Dart VM from tree-shaking the function.
+
+```dart
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  // Show the incoming call — onEvent listeners in other isolates
+  // will not receive these events, handle logic here directly.
+  await showCallkitIncoming(const Uuid().v4());
+}
+```
+
+<Warning>
+  Event stream listeners registered in the main isolate do not receive events fired in a background isolate. Handle any required logic (API calls, notifications) directly inside the background handler.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Show incoming call" icon="phone-incoming" href="/guides/show-incoming-call">
+    Display the native incoming call screen.
+  </Card>
+  <Card title="Outgoing calls" icon="phone-outgoing" href="/guides/outgoing-call">
+    Start and manage outgoing calls.
+  </Card>
+</CardGroup>

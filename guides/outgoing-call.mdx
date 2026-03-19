@@ -1,0 +1,108 @@
+---
+title: "Outgoing calls"
+description: "Start an outgoing call and manage it with FlutterCallkitIncoming"
+---
+
+`startCall` integrates outgoing calls with the native telephony layer. On **iOS** it uses CallKit to create a call history entry in the Phone app. On **Android** it only fires callback events — there is no system UI for outgoing calls.
+
+## Start an outgoing call
+
+```dart
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:uuid/uuid.dart';
+
+final _uuid = const Uuid();
+String _currentUuid = _uuid.v4();
+
+CallKitParams params = CallKitParams(
+  id: _currentUuid,
+  nameCaller: 'Hien Nguyen',
+  handle: '0123456789',
+  type: 1,
+  extra: <String, dynamic>{'userId': '1a2b3c4d'},
+  ios: IOSParams(handleType: 'generic'),
+  callingNotification: const NotificationParams(
+    showNotification: true,
+    isShowCallback: true,
+    subtitle: 'Calling...',
+    callbackText: 'Hang Up',
+  ),
+  android: const AndroidParams(
+    isCustomNotification: true,
+    isShowCallID: true,
+  ),
+);
+await FlutterCallkitIncoming.startCall(params);
+```
+
+Listen on the `onEvent` stream for `Event.actionCallStart` to navigate to your calling screen in Flutter.
+
+## Mark the call as connected
+
+After your WebRTC or P2P session is established, call `setCallConnected`. This starts the call timer in the iOS Phone app history and fires a connected event.
+
+```dart
+await FlutterCallkitIncoming.setCallConnected(_currentUuid);
+```
+
+<Tip>
+  Call `setCallConnected` after `startCall` succeeds **and** after the media connection is established — not immediately on dial.
+</Tip>
+
+## End a call
+
+```dart
+// End a specific call by UUID
+await FlutterCallkitIncoming.endCall(_currentUuid);
+
+// End all active calls
+await FlutterCallkitIncoming.endAllCalls();
+```
+
+On iOS both methods update the call history in the Phone app. On Android they fire callback events only.
+
+## Mute and hold
+
+```dart
+// Mute the microphone
+await FlutterCallkitIncoming.muteCall(_currentUuid, isMuted: true);
+
+// Unmute
+await FlutterCallkitIncoming.muteCall(_currentUuid, isMuted: false);
+
+// Check current mute status
+bool muted = await FlutterCallkitIncoming.isMuted(_currentUuid);
+
+// Put the call on hold
+await FlutterCallkitIncoming.holdCall(_currentUuid, isOnHold: true);
+
+// Resume from hold
+await FlutterCallkitIncoming.holdCall(_currentUuid, isOnHold: false);
+```
+
+<Note>
+  `muteCall` and `holdCall` update the CallKit UI on iOS. On Android they only fire the corresponding callback event — your app is responsible for applying the mute/hold state to the media stream.
+</Note>
+
+## Silence and unsilence events
+
+Use `silenceEvents` to temporarily stop the `onEvent` stream from emitting. Use `unsilenceEvents` to resume.
+
+```dart
+// Stop emitting call events (e.g. during a transition)
+await FlutterCallkitIncoming.silenceEvents();
+
+// Resume emitting call events
+await FlutterCallkitIncoming.unsilenceEvents();
+```
+
+This is useful when you need to suppress events during a screen transition or app state change where acting on them would cause incorrect behaviour.
+
+<CardGroup cols={2}>
+  <Card title="Call events" icon="bolt" href="/guides/call-events">
+    Handle actionCallStart, actionCallConnected, and other lifecycle events.
+  </Card>
+  <Card title="Show incoming call" icon="phone-incoming" href="/guides/show-incoming-call">
+    Display a native incoming call screen.
+  </Card>
+</CardGroup>

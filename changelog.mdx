@@ -1,0 +1,312 @@
+---
+title: "Changelog"
+description: "Release history for Flutter Callkit Incoming"
+---
+
+All notable changes to `flutter_callkit_incoming` are documented here. For the latest published version, visit the [pub.dev package page](https://pub.dev/packages/flutter_callkit_incoming).
+
+## 3.0.0
+
+- Using Plugin DSL for Android, thank [@AAkira](https://github.com/AAkira) ([#743](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/743))
+- Add Android native callback, thank [@joshoconnor89](https://github.com/joshoconnor89) ([#736](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/736))
+- Improve plugin lifecycle, thank [@lohzi97](https://github.com/lohzi97) ([#746](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/746))
+- Fixed some bugs.
+
+## 2.5.8
+
+- Fix OnGoing notification Android
+- Add missed call notification for iOS (notification/callback action — requires additional setup in AppDelegate.swift)
+- Add `requestNotificationPermission` for iOS
+
+## 2.5.7
+
+- Fix build Android
+- Fix stop sound notification when screen off Android
+
+## 2.5.6
+
+- Fix bug duplicate permission Android
+- Replaces MediaPlayer with Ringtone Android
+- Fix bug notification channel Android
+- Stop sound notification when screen off Android
+
+## 2.5.5
+
+- Fix bug duplicate permission Android
+
+## 2.5.4
+
+- Fix bug custom permission Android
+- Remove calling notification when task removed
+- Fixed calling notification show
+- Fixed some bugs.
+
+## 2.5.3
+
+- Update Android 14+ compatibility (force CallStyle / `FOREGROUND_SERVICE_PHONE_CALL`)
+- Change structure of Notification/Sound on Android
+- Update get avatar from assets (Android), thanks [@Ricky-yu](https://github.com/Ricky-yu) ([#674](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/674))
+- Add `isAccepted` property for iOS and only show FaceTime button if video is supported, thank [@td2thinh](https://github.com/td2thinh) ([#673](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/673))
+- Fixed some bugs.
+
+## 2.5.3-alpha
+
+- Update Android 14+ compatibility (force CallStyle / `FOREGROUND_SERVICE_PHONE_CALL`)
+- Fixed some bugs.
+
+## 2.5.2
+
+- Add calling notification for Android (`callingNotification`), thank [@ebsangam](https://github.com/ebsangam) ([#662](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/662))
+- Add `logoUrl` property (inside android prop)
+- Fixed issue DTMF iOS, thank [@minn-ee](https://github.com/minn-ee) ([#577](https://github.com/hiennguyen92/flutter_callkit_incoming/issues/577))
+- Fixed issue duplicate missing notification Android
+- Fixed some bugs.
+
+## 2.5.1
+
+- Fix issue security Android, thanks [@datpt11](https://github.com/datpt11) ([#651](https://github.com/hiennguyen92/flutter_callkit_incoming/issues/651))
+
+## 2.5.0
+
+- Update `jvmToolchain(17)` for Android
+
+## 2.0.4+2
+
+- Add func `requestFullIntentPermission` (Android 14+), thank [@Spyspyspy](https://github.com/Spyspyspy) ([#584](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/584))
+- Set Notification call style (Android), thank [@AAkira](https://github.com/AAkira) ([#553](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/553))
+- Many other issues
+  - Add prop `accepted` in `activeCalls` (iOS), thank [@vasilich6107](https://github.com/vasilich6107)
+
+## 2.0.4+1
+
+- Removed `Telecom Framework` (Android)
+
+## 2.0.4
+
+- Removed `Telecom Framework` (Android)
+- Fixed hide notification for action `CallBack` (Android)
+
+## 2.0.3
+
+- Fixed linked func `hideCallkitIncoming`
+
+## 2.0.2+2
+
+- Fixed linked func `hideCallkitIncoming`
+
+## 2.0.2+1
+
+- Fixed linked func `hideCallkitIncoming`
+
+## 2.0.2
+
+- Add func `hideCallkitIncoming` to clear the incoming notification/ring (after accept/decline/timeout)
+- Add prop `isShowFullLockedScreen` on Android
+- Fixed example / Fixed update Android 14
+
+## 2.0.1+2
+
+- Add action for `onDecline`
+- Add action for `onEnd`
+- Add Android prop `isShowCallID`
+
+## 2.0.1+1
+
+- Add callback `AVAudioSession` for WebRTC setup
+- Fix issue no audio when using WebRTC
+
+## 2.0.1-dev.2
+
+- Add action for `onAccept`
+
+## 2.0.1-dev.1
+
+- Add `AVAudioSession` in AppDelegate (iOS)
+
+## 2.0.1-dev
+
+- Add `AVAudioSession` in AppDelegate (iOS)
+
+## 2.0.1
+
+- Fixed some bugs.
+- Android: using Telecom Framework
+- Add `silenceEvents`
+- Add `normalHandle` props ([#403](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/403))
+- Android: add `textColor` props ([#398](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/398))
+- Android: invisible avatar for default ([#393](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/393))
+- Add method for calling API when accept/decline/end/timeout
+
+## 2.0.0+2
+
+- Fixed some bugs.
+- Support request permission for Android 13+ (`requestNotificationPermission`)
+
+## 2.0.0+1
+
+- Fixed some bugs.
+- Add `landscape` support for tablet
+- Fix issue head-up for Redmi / Xiaomi devices
+
+## 2.0.0
+
+- Fixed some bugs.
+- Adapt `flutter_lints` and use lowerCamelCase for Event enum
+- Rename properties:
+  - `textMisssedCall` → `subtitle`
+  - `textCallback` → `callbackText`
+  - `isShowMissedCallNotification` → `showNotification`
+- Move inside properties: `missedCallNotification { showNotification, isShowCallback, subtitle, callbackText }`
+- Add `setCallConnected` option for iOS: `await FlutterCallkitIncoming.setCallConnected(this._currentUuid)`
+- Add hold option for iOS
+- Add mute call option for iOS
+- Many other issues:
+  - Thanks [@ryojiro](https://github.com/ryojiro) ([#263](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/263), [#264](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/264), [#262](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/262))
+  - Many thanks [@mouEsam](https://github.com/mouEsam) ([#227](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/227))
+
+## 1.0.3+3
+
+- Update README.md
+- Fixed some bugs.
+
+## 1.0.3+2
+
+- REMOVED
+
+## 1.0.3+1
+
+- Dart class models instead of using dynamic types and Maps, thank [@icodelifee](https://github.com/icodelifee) ([#180](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/180))
+- Allow calling from native Android, thank [@fabiocody](https://github.com/fabiocody) ([#185](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/185))
+- Add Android notification channel name props `incomingCallNotificationChannelName` and `missedCallNotificationChannelName`, thank [@AAkira](https://github.com/AAkira) ([#177](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/177))
+- Add feature to change notification template to small `isCustomSmallExNotification`, thank [@anocean2](https://github.com/anocean2) ([#196](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/196))
+- Fixed ringtone sound not playing in Release mode on Android, thank [@mschudt](https://github.com/mschudt) ([#204](https://github.com/hiennguyen92/flutter_callkit_incoming/pull/204))
+- Fixed some bugs.
+
+## 1.0.3
+
+- REMOVED
+
+## 1.0.2+2
+
+- Fix notification Android 12
+- Fix sound notification
+- Support `backgroundUrl` using path assets
+- Fixed some bugs.
+
+## 1.0.2+1
+
+- Issue no audio when Accept (iOS)
+- Duplicate sound notification (Android)
+- Support Flutter 3
+- Fixed some bugs.
+
+## 1.0.2
+
+- Fixed issue open app (terminated/background state — Android)
+- Completed example
+- Fixed some bugs.
+
+## 1.0.1+8
+
+- Add prop `isShowMissedCallNotification` to show Missed Call notification (Android)
+- Fixed issue on decline (terminated/background state — there will be about 3 seconds to call the API before the app is closed)
+- Fixed some bugs.
+
+## 1.0.1+7
+
+- Fixed issue open app (terminated/background state)
+- Fixed some bugs.
+
+## 1.0.1+6
+
+- Add props for text
+- Fixed issue open app (terminated/background state)
+- Fixed some bugs.
+
+## 1.0.1+5
+
+- Update custom missed call notification
+- Fixed issue open app (terminated/background state)
+
+## 1.0.1+4
+
+- Add `showMissCallNotification` (Android only) to show missed call notification
+- Fixed some bugs.
+
+## 1.0.1+3
+
+- Add prop `isShowCallback` to show Callback for missed call (Android)
+- Public props data call for Objective-C/Swift
+- Example using FCM (Android)
+- Fixed some bugs.
+
+## 1.0.1+2
+
+- Fixed issue default ringtone (Android)
+- Fixed issue vibration (Android)
+- Fixed issue sound play type ringtone volume system (Android)
+- Fixed flow incoming screen (Android)
+- Fixed some bugs.
+
+## 1.0.1+1
+
+- Switch to using Service for Ringtone (Android)
+- Fixed issue vibration (Android)
+- Add `getDevicePushTokenVoIP()` feature
+- Fixed some bugs.
+
+## 1.0.1
+
+- PushKit and VoIP setup instructions (PUSHKIT.md)
+- Callback from Recent History (iOS)
+- Using system ringtone as default
+- Fixed func `endAllCalls()` Android
+- Bugs Android 12
+- Fixed some bugs.
+
+## 1.0.0+8
+
+- Share func call from native (iOS)
+
+## 1.0.0+7
+
+- Add custom `headers` for avatar/background image (Android only)
+
+## 1.0.0+6
+
+- Fixed func `activeCalls()` — Get active calls
+
+## 1.0.0+5
+
+- Fixed `endCall`
+- Bugs targeting Android 12 (Android)
+- Bugs `audio session` (iOS)
+- Fixed some bugs.
+
+## 1.0.0+4
+
+- Update README.md
+- Add func `activeCalls()` — Get active calls
+- Remove notification when clicking action `Call back` (Android)
+- Bugs `no activation of the audio session` (iOS)
+- Fixed some bugs.
+
+## 1.0.0+3
+
+- Update README.md
+- Add Android prop `isShowLogo`
+- Fixed some bugs.
+
+## 1.0.0+2
+
+- Update README.md
+- Update documentation.
+
+## 1.0.0+1
+
+- Update README.md
+- Fixed some bugs.
+
+## 1.0.0
+
+- Initial release.

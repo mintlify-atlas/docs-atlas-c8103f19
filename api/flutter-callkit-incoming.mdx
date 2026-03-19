@@ -1,0 +1,483 @@
+---
+title: "FlutterCallkitIncoming"
+description: "Static API for controlling call UI and listening to call events"
+---
+
+The `FlutterCallkitIncoming` class is the main entry point for all call management operations. All methods are static — no instance is required.
+
+```dart
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+```
+
+## onEvent
+
+```dart
+static Stream<CallEvent?> get onEvent
+```
+
+A broadcast stream that emits [CallEvent](/api/call-event) objects as the call lifecycle progresses. Subscribe once globally (e.g. in `initState` or `main`) and keep the subscription alive for the duration of your app.
+
+```dart
+FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
+  if (event == null) return;
+  switch (event.event) {
+    case Event.actionCallIncoming:
+      // handle incoming call
+      break;
+    case Event.actionCallAccept:
+      // handle accepted call
+      break;
+    default:
+      break;
+  }
+});
+```
+
+<Note>
+The stream is a broadcast stream, so multiple listeners are allowed. Each listener receives every event independently.
+</Note>
+
+---
+
+## showCallkitIncoming
+
+```dart
+static Future showCallkitIncoming(CallKitParams params)
+```
+
+Displays an incoming call UI. On iOS this uses the native CallKit framework; on Android it shows a custom full-screen notification UI.
+
+<ParamField path="params" type="CallKitParams" required>
+  Configuration for the incoming call. See [CallKitParams](/api/call-kit-params) for all available fields.
+</ParamField>
+
+**Returns:** `Future` — completes when the platform has processed the request.
+
+<Note>
+**iOS:** Uses `CXCallController` / CallKit. Only works on a real device — CallKit does not run in the simulator.
+
+**Android:** Displays a custom full-screen notification. On Android 13+ you must call `requestNotificationPermission` first. On Android 14+ call `requestFullIntentPermission` / `canUseFullScreenIntent` before showing the incoming call screen.
+</Note>
+
+```dart
+final uuid = const Uuid().v4();
+await FlutterCallkitIncoming.showCallkitIncoming(
+  CallKitParams(
+    id: uuid,
+    nameCaller: 'Jane Doe',
+    handle: '0123456789',
+    type: 0,
+    duration: 30000,
+    android: const AndroidParams(backgroundColor: '#0955fa'),
+    ios: const IOSParams(handleType: 'generic'),
+  ),
+);
+```
+
+---
+
+## showMissCallNotification
+
+```dart
+static Future showMissCallNotification(CallKitParams params)
+```
+
+Shows a missed-call notification immediately, without waiting for a timeout. This is an Android-only method.
+
+<ParamField path="params" type="CallKitParams" required>
+  Call configuration. The `missedCallNotification` field controls the notification appearance. See [CallKitParams](/api/call-kit-params).
+</ParamField>
+
+**Returns:** `Future`
+
+<Note>
+**Android only.** This method has no effect on iOS.
+</Note>
+
+```dart
+await FlutterCallkitIncoming.showMissCallNotification(
+  CallKitParams(
+    id: uuid,
+    nameCaller: 'Jane Doe',
+    handle: '0123456789',
+    type: 0,
+    missedCallNotification: const NotificationParams(
+      showNotification: true,
+      isShowCallback: true,
+      subtitle: 'Missed call',
+      callbackText: 'Call back',
+    ),
+  ),
+);
+```
+
+---
+
+## hideCallkitIncoming
+
+```dart
+static Future hideCallkitIncoming(CallKitParams params)
+```
+
+Dismisses the currently displayed incoming call notification on Android.
+
+<ParamField path="params" type="CallKitParams" required>
+  Must include the `id` of the call to dismiss.
+</ParamField>
+
+**Returns:** `Future`
+
+<Note>
+**Android only.** This method has no effect on iOS.
+</Note>
+
+```dart
+await FlutterCallkitIncoming.hideCallkitIncoming(
+  CallKitParams(id: currentUuid),
+);
+```
+
+---
+
+## startCall
+
+```dart
+static Future startCall(CallKitParams params)
+```
+
+Starts an outgoing call. On iOS this creates a CallKit outgoing-call entry in the system Phone app history. On Android it fires the `actionCallStart` event only.
+
+<ParamField path="params" type="CallKitParams" required>
+  Configuration for the outgoing call. See [CallKitParams](/api/call-kit-params).
+</ParamField>
+
+**Returns:** `Future`
+
+<Note>
+**iOS:** Creates a history entry in the native Phone app via CallKit.
+
+**Android:** Emits `Event.actionCallStart` through `onEvent`. No UI is shown; display your own calling screen in Flutter.
+</Note>
+
+```dart
+await FlutterCallkitIncoming.startCall(
+  CallKitParams(
+    id: uuid,
+    nameCaller: 'Jane Doe',
+    handle: '0123456789',
+    type: 1,
+    ios: const IOSParams(handleType: 'generic'),
+  ),
+);
+```
+
+---
+
+## muteCall
+
+```dart
+static Future muteCall(String id, {bool isMuted = true})
+```
+
+Mutes or unmutes an ongoing call.
+
+<ParamField path="id" type="String" required>
+  UUID of the call to mute/unmute.
+</ParamField>
+
+<ParamField path="isMuted" type="bool">
+  `true` to mute, `false` to unmute. Defaults to `true`.
+</ParamField>
+
+**Returns:** `Future`
+
+<Note>
+**iOS:** Updates the mute state in the CallKit ongoing-call UI.
+
+**Android:** Emits `Event.actionCallToggleMute` through `onEvent` only — no native UI is updated.
+</Note>
+
+```dart
+// Mute
+await FlutterCallkitIncoming.muteCall(currentUuid);
+// Unmute
+await FlutterCallkitIncoming.muteCall(currentUuid, isMuted: false);
+```
+
+---
+
+## isMuted
+
+```dart
+static Future<bool> isMuted(String id)
+```
+
+Returns the current mute state of a call.
+
+<ParamField path="id" type="String" required>
+  UUID of the call to query.
+</ParamField>
+
+**Returns:** `Future<bool>` — `true` if the call is muted, `false` otherwise. Returns `false` if the state cannot be determined.
+
+<Note>
+**iOS:** Reads the mute state from the active CallKit call.
+
+**Android:** Always returns `false` (no native mute tracking).
+</Note>
+
+```dart
+final muted = await FlutterCallkitIncoming.isMuted(currentUuid);
+```
+
+---
+
+## holdCall
+
+```dart
+static Future holdCall(String id, {bool isOnHold = true})
+```
+
+Puts an ongoing call on hold or resumes it.
+
+<ParamField path="id" type="String" required>
+  UUID of the call.
+</ParamField>
+
+<ParamField path="isOnHold" type="bool">
+  `true` to hold, `false` to resume. Defaults to `true`.
+</ParamField>
+
+**Returns:** `Future`
+
+<Note>
+**iOS:** Updates the hold state in the CallKit ongoing-call UI.
+
+**Android:** Emits `Event.actionCallToggleHold` through `onEvent` only.
+</Note>
+
+```dart
+await FlutterCallkitIncoming.holdCall(currentUuid);
+await FlutterCallkitIncoming.holdCall(currentUuid, isOnHold: false);
+```
+
+---
+
+## endCall
+
+```dart
+static Future endCall(String id)
+```
+
+Ends a specific ongoing or incoming call.
+
+<ParamField path="id" type="String" required>
+  UUID of the call to end.
+</ParamField>
+
+**Returns:** `Future`
+
+<Note>
+**iOS:** Updates the call history in the native Phone app via CallKit.
+
+**Android:** Emits `Event.actionCallEnded` through `onEvent` only.
+</Note>
+
+```dart
+await FlutterCallkitIncoming.endCall(currentUuid);
+```
+
+---
+
+## setCallConnected
+
+```dart
+static Future setCallConnected(String id)
+```
+
+Marks a call as successfully connected. Call this after your WebRTC/P2P connection is established. On iOS this resets and starts the call duration timer in the Phone app.
+
+<ParamField path="id" type="String" required>
+  UUID of the call that has connected.
+</ParamField>
+
+**Returns:** `Future`
+
+<Tip>
+Call `setCallConnected` after both `showCallkitIncoming` / `startCall` and after your signalling handshake completes, so the Phone app call timer is accurate.
+</Tip>
+
+```dart
+await FlutterCallkitIncoming.setCallConnected(currentUuid);
+```
+
+---
+
+## endAllCalls
+
+```dart
+static Future endAllCalls()
+```
+
+Ends all active calls at once.
+
+**Returns:** `Future`
+
+```dart
+await FlutterCallkitIncoming.endAllCalls();
+```
+
+---
+
+## activeCalls
+
+```dart
+static Future<dynamic> activeCalls()
+```
+
+Retrieves a list of currently active calls.
+
+**Returns:** `Future<dynamic>` — a list of call objects. Each object contains at minimum the `id` field.
+
+<Note>
+**iOS:** Returns all active calls tracked by CallKit.
+
+**Android:** Returns only the last recorded call.
+</Note>
+
+```dart
+final calls = await FlutterCallkitIncoming.activeCalls();
+// Example output: [{"id": "8BAA2B26-47AD-42C1-9197-1D75F662DF78", ...}]
+```
+
+---
+
+## getDevicePushTokenVoIP
+
+```dart
+static Future getDevicePushTokenVoIP()
+```
+
+Retrieves the device VoIP push token used to send PushKit notifications to this device.
+
+**Returns:** `Future` — the VoIP push token string on iOS; an empty value on Android.
+
+<Note>
+**iOS:** Returns the APNs VoIP push token (e.g. `d6a77ca80c5f09f87f353cdd328ec8d7d34e92eb108d046c91906f27f54949cd`). You must call `SwiftFlutterCallkitIncomingPlugin.sharedInstance?.setDevicePushTokenVoIP(deviceToken)` from your `AppDelegate.swift` `pushRegistry(_:didUpdate:for:)` delegate method.
+
+**Android:** Returns an empty string. Use FCM for Android push tokens instead.
+</Note>
+
+```dart
+final token = await FlutterCallkitIncoming.getDevicePushTokenVoIP();
+print(token); // iOS: 'd6a77ca80c5f09f87f353cdd328ec8d7d34e92eb108d046c91906f27f54949cd'
+```
+
+---
+
+## silenceEvents
+
+```dart
+static Future silenceEvents()
+```
+
+Suppresses CallKit events so they are not forwarded to the `onEvent` stream. Useful when you want to temporarily pause event processing.
+
+**Returns:** `Future`
+
+```dart
+await FlutterCallkitIncoming.silenceEvents();
+```
+
+---
+
+## unsilenceEvents
+
+```dart
+static Future unsilenceEvents()
+```
+
+Resumes forwarding CallKit events to the `onEvent` stream after a call to `silenceEvents`.
+
+**Returns:** `Future`
+
+```dart
+await FlutterCallkitIncoming.unsilenceEvents();
+```
+
+---
+
+## requestNotificationPermission
+
+```dart
+static Future requestNotificationPermission(dynamic data)
+```
+
+Requests the `POST_NOTIFICATIONS` permission required on Android 13 (API 33) and above. Call this before `showCallkitIncoming` on first launch.
+
+<ParamField path="data" type="dynamic" required>
+  A `Map<String, String>` containing UI strings for the permission dialog:
+
+  - `title` — Dialog title.
+  - `rationaleMessagePermission` — Rationale message shown before the system dialog.
+  - `postNotificationMessageRequired` — Message shown if the user denies and must open Settings.
+</ParamField>
+
+**Returns:** `Future`
+
+<Note>
+**Android 13+ only.** Has no effect on Android 12 and below, or on iOS.
+</Note>
+
+```dart
+await FlutterCallkitIncoming.requestNotificationPermission({
+  'title': 'Notification permission',
+  'rationaleMessagePermission':
+      'Notification permission is required, to show notification.',
+  'postNotificationMessageRequired':
+      'Notification permission is required, please allow notification permission from Settings.',
+});
+```
+
+---
+
+## requestFullIntentPermission
+
+```dart
+static Future requestFullIntentPermission()
+```
+
+Opens the system settings screen to grant the `ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT` permission required on Android 14 (API 34) and above for full-screen incoming call UI on the lock screen.
+
+**Returns:** `Future`
+
+<Note>
+**Android 14+ only.** Check `canUseFullScreenIntent` first; only call this if the permission is not already granted.
+</Note>
+
+```dart
+final canUse = await FlutterCallkitIncoming.canUseFullScreenIntent();
+if (canUse != true) {
+  await FlutterCallkitIncoming.requestFullIntentPermission();
+}
+```
+
+---
+
+## canUseFullScreenIntent
+
+```dart
+static Future canUseFullScreenIntent()
+```
+
+Checks whether the app currently holds the `ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT` permission on Android 14 and above.
+
+**Returns:** `Future` — `true` if the permission is granted, `false` otherwise.
+
+<Note>
+**Android 14+ only.** Always returns `true` on lower API levels and on iOS.
+</Note>
+
+```dart
+final canUse = await FlutterCallkitIncoming.canUseFullScreenIntent();
+```

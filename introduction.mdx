@@ -1,0 +1,64 @@
+---
+title: "Introduction"
+description: "Flutter Callkit Incoming — a Flutter plugin for native incoming call UI on Android and iOS"
+---
+
+Flutter Callkit Incoming is a Flutter plugin that displays a native incoming call UI on both Android and iOS. On iOS it uses Apple's CallKit framework to render the system-level call screen. On Android it renders a custom full-screen notification that works across foreground, background, and terminated app states.
+
+## Platform behaviour
+
+| Platform | Implementation | Minimum requirement |
+|----------|---------------|---------------------|
+| iOS | Native CallKit framework | Real device only — CallKit does not run on the simulator |
+| Android | Custom full-screen notification | API level 21 (Android 5.0) |
+
+<Warning>
+  iOS CallKit only works on a **real device**. Testing on the iOS Simulator will not show any incoming call UI.
+</Warning>
+
+<Note>
+  Starting with **v2.5.0**, the Android build requires **Java SDK 17 or later**. Make sure your development environment and CI pipeline use `jvmToolchain(17)`.
+</Note>
+
+## Current version
+
+The latest stable release is **3.0.0**, published on [pub.dev](https://pub.dev/packages/flutter_callkit_incoming).
+
+Release highlights for 3.0.0:
+- Android now uses Plugin DSL
+- Native Android callback support via `CallkitEventCallback`
+- Improved plugin lifecycle management
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Incoming call UI" icon="phone-incoming">
+    Show a full-screen incoming call screen on Android and a native CallKit sheet on iOS, triggered from any app state.
+  </Card>
+  <Card title="Outgoing call support" icon="phone-outgoing">
+    Start outgoing calls that appear in the iOS phone history and trigger the correct lifecycle events on both platforms.
+  </Card>
+  <Card title="Customisable Android UI" icon="palette">
+    Set background colour, background image, avatar, ringtone, action colours, text colours, and notification channel names for Android.
+  </Card>
+  <Card title="iOS CallKit integration" icon="apple">
+    Configure handle type, audio session, DTMF, hold, grouping, and video support through native CallKit options.
+  </Card>
+  <Card title="Event stream" icon="radio">
+    Listen to a broadcast stream of call lifecycle events: incoming, accepted, declined, ended, timed-out, and more.
+  </Card>
+  <Card title="PushKit / VoIP support" icon="bell">
+    Integrates with iOS PushKit so your app can wake from a terminated state and display an incoming call screen.
+  </Card>
+</CardGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Add the package to your Flutter project and configure the Java SDK version.
+  </Card>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Show your first incoming call screen in minutes with a complete working example.
+  </Card>
+</CardGroup>
