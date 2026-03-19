@@ -192,9 +192,9 @@ Mutes or unmutes an ongoing call.
 **Returns:** `Future`
 
 <Note>
-**iOS:** Updates the mute state in the CallKit ongoing-call UI.
+  **iOS:** Updates the mute state in the CallKit ongoing-call UI.
 
-**Android:** Emits `Event.actionCallToggleMute` through `onEvent` only — no native UI is updated.
+  **Android:** No native UI is updated. An `Event.actionCallToggleMute` event is emitted through `onEvent` so your Dart code can respond and apply the mute state to your media stream.
 </Note>
 
 ```dart
@@ -221,9 +221,9 @@ Returns the current mute state of a call.
 **Returns:** `Future<bool>` — `true` if the call is muted, `false` otherwise. Returns `false` if the state cannot be determined.
 
 <Note>
-**iOS:** Reads the mute state from the active CallKit call.
+  **iOS:** Reads the mute state from the active CallKit call.
 
-**Android:** Always returns `false` (no native mute tracking).
+  **Android:** Always returns `true` (the Android implementation does not track actual mute state).
 </Note>
 
 ```dart
@@ -251,9 +251,9 @@ Puts an ongoing call on hold or resumes it.
 **Returns:** `Future`
 
 <Note>
-**iOS:** Updates the hold state in the CallKit ongoing-call UI.
+  **iOS:** Updates the hold state in the CallKit ongoing-call UI.
 
-**Android:** Emits `Event.actionCallToggleHold` through `onEvent` only.
+  **Android:** No native UI is updated. An `Event.actionCallToggleHold` event is emitted through `onEvent` so your Dart code can respond and apply the hold state to your media stream.
 </Note>
 
 ```dart
@@ -340,9 +340,9 @@ Retrieves a list of currently active calls.
 **Returns:** `Future<dynamic>` — a list of call objects. Each object contains at minimum the `id` field.
 
 <Note>
-**iOS:** Returns all active calls tracked by CallKit.
+**iOS:** Returns all active calls tracked by CallKit. Each entry contains `id` and `accepted` fields.
 
-**Android:** Returns only the last recorded call.
+**Android:** Returns only the last recorded call. The result map includes an `isAccepted` field indicating whether the call was answered.
 </Note>
 
 ```dart

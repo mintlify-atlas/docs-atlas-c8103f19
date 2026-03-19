@@ -149,8 +149,13 @@ If you are triggering `showCallkitIncoming` from a Firebase Cloud Messaging back
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  // generate a UUID and show the incoming call
-  await showCallkitIncoming(const Uuid().v4());
+  final uuid = const Uuid().v4();
+  await FlutterCallkitIncoming.showCallkitIncoming(CallKitParams(
+    id: uuid,
+    nameCaller: message.data['nameCaller'] ?? '',
+    handle: message.data['handle'] ?? '',
+    type: int.tryParse(message.data['type'] ?? '0') ?? 0,
+  ));
 }
 ```
 

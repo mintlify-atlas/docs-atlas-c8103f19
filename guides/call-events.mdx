@@ -88,12 +88,17 @@ FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
 
 | Event | Description |
 |-------|-------------|
-| `actionCallToggleHold` | The user toggled the hold state from the CallKit UI. |
-| `actionCallToggleMute` | The user toggled mute from the CallKit UI. |
 | `actionCallToggleDmtf` | A DTMF tone was sent from the CallKit UI. |
 | `actionCallToggleGroup` | The user grouped or ungrouped calls from the CallKit UI. |
 | `actionCallToggleAudioSession` | The audio session was activated or deactivated by CallKit. |
 | `actionDidUpdateDevicePushTokenVoip` | The device's VoIP push token changed. Store this token on your server to send future VoIP pushes. |
+
+### Both platforms (via programmatic API)
+
+| Event | Description |
+|-------|-------------|
+| `actionCallToggleHold` | Fired when `holdCall` is called. On iOS also triggered from the CallKit UI. |
+| `actionCallToggleMute` | Fired when `muteCall` is called. On iOS also triggered from the CallKit UI. |
 
 ## Reading event data
 
@@ -123,7 +128,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   // Show the incoming call — onEvent listeners in other isolates
   // will not receive these events, handle logic here directly.
-  await showCallkitIncoming(const Uuid().v4());
+  final uuid = const Uuid().v4();
+  await FlutterCallkitIncoming.showCallkitIncoming(CallKitParams(
+    id: uuid,
+    nameCaller: message.data['nameCaller'] ?? '',
+    handle: message.data['handle'] ?? '',
+    type: int.tryParse(message.data['type'] ?? '0') ?? 0,
+  ));
 }
 ```
 

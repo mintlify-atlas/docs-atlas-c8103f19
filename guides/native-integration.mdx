@@ -129,7 +129,8 @@ You can fire a custom event to the Dart `onEvent` stream from native code. The e
 
   <Tab title="Kotlin">
     ```kotlin
-    FlutterCallkitIncomingPlugin.getInstance().sendEventCustom(body: Map<String, Any>)
+    val body = mapOf("customKey" to "customValue")
+    FlutterCallkitIncomingPlugin.getInstance().sendEventCustom(body)
     ```
   </Tab>
 </Tabs>

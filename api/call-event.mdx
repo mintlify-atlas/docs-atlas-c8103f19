@@ -51,8 +51,8 @@ All enum values are defined in `call_event.dart`. The internal event name string
 | `actionCallTimeout` | `...ACTION_CALL_TIMEOUT` | Both | The incoming call timed out without being answered (missed call). |
 | `actionCallConnected` | `...ACTION_CALL_CONNECTED` | Both | The call was marked as connected via `setCallConnected`. |
 | `actionCallCallback` | `...ACTION_CALL_CALLBACK` | Android only | User tapped the "Call back" action in a missed-call notification. |
-| `actionCallToggleHold` | `...ACTION_CALL_TOGGLE_HOLD` | iOS only | The user toggled the hold state from the CallKit UI. |
-| `actionCallToggleMute` | `...ACTION_CALL_TOGGLE_MUTE` | iOS only | The user toggled the mute state from the CallKit UI. |
+| `actionCallToggleHold` | `...ACTION_CALL_TOGGLE_HOLD` | Both | Fired when `holdCall` is called on either platform, or when the user toggles hold from the iOS CallKit UI. |
+| `actionCallToggleMute` | `...ACTION_CALL_TOGGLE_MUTE` | Both | Fired when `muteCall` is called on either platform, or when the user toggles mute from the iOS CallKit UI. |
 | `actionCallToggleDmtf` | `...ACTION_CALL_TOGGLE_DMTF` | iOS only | The user interacted with the DTMF keypad in the CallKit UI. |
 | `actionCallToggleGroup` | `...ACTION_CALL_TOGGLE_GROUP` | iOS only | The user toggled call grouping in the CallKit UI. |
 | `actionCallToggleAudioSession` | `...ACTION_CALL_TOGGLE_AUDIO_SESSION` | iOS only | The audio session was toggled by CallKit. |
@@ -113,13 +113,13 @@ void initCallEvents() {
           break;
 
         case Event.actionCallToggleHold:
-          // iOS only: hold state changed
+          // Both platforms: hold state changed (via holdCall, or iOS CallKit UI)
           final isOnHold = event.body['isOnHold'] as bool? ?? false;
           print('On hold: $isOnHold');
           break;
 
         case Event.actionCallToggleMute:
-          // iOS only: mute state changed
+          // Both platforms: mute state changed (via muteCall, or iOS CallKit UI)
           final isMuted = event.body['isMuted'] as bool? ?? false;
           print('Muted: $isMuted');
           break;

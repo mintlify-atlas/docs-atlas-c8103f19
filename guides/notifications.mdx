@@ -41,10 +41,14 @@ await FlutterCallkitIncoming.showMissCallNotification(params);
 
 | Field | Type | Description | Default |
 |-------|------|-------------|---------|
-| `showNotification` | `bool` | Show the notification when the call times out or is missed. | `true` |
-| `isShowCallback` | `bool` | Show a "Call back" action button in the notification. | `true` |
-| `subtitle` | `String` | Text displayed in the notification body. | `"Missed Call"` |
-| `callbackText` | `String` | Label for the callback action button. | `"Call back"` |
+| `showNotification` | `bool?` | Show the notification when the call times out or is missed. | `true` |
+| `isShowCallback` | `bool?` | Show a "Call back" action button in the notification. | `true` |
+| `subtitle` | `String?` | Text displayed in the notification body. | — |
+| `callbackText` | `String?` | Label for the callback action button. | — |
+| `id` | `int?` | Internal Android notification ID. Auto-assigned if not set. | — |
+| `count` | `int?` | Badge count shown on the notification (Android launcher support required). | — |
+
+See [NotificationParams](/api/notification-params) for the full API reference.
 
 ## Calling notification
 
